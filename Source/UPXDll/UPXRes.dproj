@@ -1,0 +1,201 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{5B5BA648-201C-48F0-9F7D-4FE08A3AD7E2}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>UPXRes.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Release</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_DependencyCheckOutputName>..\..\bin\UPXRes.dll</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_DcuOutput>..\..\dcu\upxres</DCC_DcuOutput>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_Platform>x86</DCC_Platform>
+			<DCC_ExeOutput>..\..\bin</DCC_ExeOutput>
+			<DCC_N>false</DCC_N>
+			<DCC_S>false</DCC_S>
+			<GenDll>true</GenDll>
+			<DCC_E>false</DCC_E>
+			<DCC_F>false</DCC_F>
+			<DCC_K>false</DCC_K>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="UPXRes.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<RcItem Include="Upx\upx300.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx300</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx301.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx301</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx302.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx302</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx303.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx303</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx304.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx304</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx305.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx305</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx306.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx306</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx307.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx307</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx290.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx290</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx120.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx120</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx124.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx124</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx125.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx125</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx190.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx190</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx192.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx192</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx193.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx193</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx194.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx194</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx195.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx195</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx202.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx202</ResourceId>
+			</RcItem>
+			<RcItem Include="Upx\upx203.exe">
+				<ContainerId>ResourceItem</ContainerId>
+				<ResourceType>RCData</ResourceType>
+				<ResourceId>upx203</ResourceId>
+			</RcItem>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">UPXRes.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">2052</VersionInfo>
+						<VersionInfo Name="CodePage">936</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>
