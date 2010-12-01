@@ -49,9 +49,7 @@ begin
   Application.CreateForm(TSetupForm, SetupForm);
   Application.CreateForm(TCommandsForm, CommandsForm);
   Application.CreateForm(TLocalizerForm, LocalizerForm);
-  Application.CreateForm(TMainForm, MainForm);
   Application.CreateForm(TMultiForm, MultiForm);
-  Application.CreateForm(TSetupForm, SetupForm);
   Application.ShowMainForm := True;
 	Application.Run;
 end.

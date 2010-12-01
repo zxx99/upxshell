@@ -362,16 +362,13 @@ object MainForm: TMainForm
       Top = 65
       Width = 470
       Height = 226
-      ActivePage = tbsOpen
+      ActivePage = tbsCompress
       Align = alClient
       HotTrack = True
       TabOrder = 1
-      ExplicitTop = 73
-      ExplicitHeight = 218
       object tbsOpen: TTabSheet
         Caption = 'Open File'
         OnShow = tbsOpenShow
-        ExplicitHeight = 191
         object pnlOpen: TPanel
           Left = 0
           Top = 0
@@ -380,7 +377,6 @@ object MainForm: TMainForm
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitHeight = 191
           object imgHistory: TImage
             Left = 39
             Top = 72
@@ -676,7 +672,6 @@ object MainForm: TMainForm
         Caption = 'Compress'
         ImageIndex = 1
         OnShow = tbsCompressShow
-        ExplicitHeight = 191
         object pnlCompress: TPanel
           Left = 0
           Top = 0
@@ -685,7 +680,6 @@ object MainForm: TMainForm
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitHeight = 191
           object lblProgress: TLabel
             Left = 146
             Top = 12
@@ -825,7 +819,6 @@ object MainForm: TMainForm
         Caption = 'Options'
         ImageIndex = 2
         OnShow = tbsOptionsShow
-        ExplicitHeight = 191
         object pnlOptions: TPanel
           Left = 0
           Top = 0
@@ -834,7 +827,6 @@ object MainForm: TMainForm
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitHeight = 191
           object lblCompressLevel: TLabel
             Left = 212
             Top = 7
@@ -965,7 +957,6 @@ object MainForm: TMainForm
         Caption = 'About'
         ImageIndex = 3
         OnShow = tbsAboutShow
-        ExplicitHeight = 191
         object pnlAbout: TPanel
           Left = 0
           Top = 0
@@ -974,7 +965,6 @@ object MainForm: TMainForm
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitHeight = 191
           object imgIONTek: TImage
             Left = 90
             Top = 1
@@ -1689,7 +1679,6 @@ object MainForm: TMainForm
         Caption = 'Help'
         ImageIndex = 4
         OnShow = tbsHelpShow
-        ExplicitHeight = 191
         object pnlHelp: TPanel
           Left = 0
           Top = 0
@@ -1698,7 +1687,6 @@ object MainForm: TMainForm
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitHeight = 191
           object btnHelp: TButton
             Left = 135
             Top = 28
@@ -1758,7 +1746,6 @@ object MainForm: TMainForm
       object tbsUpdate: TTabSheet
         Caption = 'Update'
         ImageIndex = 5
-        ExplicitHeight = 191
         object pnlUpdate: TPanel
           Left = 0
           Top = 0
@@ -1767,7 +1754,6 @@ object MainForm: TMainForm
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitHeight = 191
           object lblOnlineVersionCap: TLabel
             Left = 4
             Top = 5
