@@ -60,6 +60,10 @@ begin
     finally
       FreeAndNil(Res);
     end;
+  end
+  else
+  begin
+    raise Exception.Create('Lose Upxres.dll');
   end;
 
 end;
