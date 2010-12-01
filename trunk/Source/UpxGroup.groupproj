@@ -1,0 +1,48 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{2E9D31AC-5D5D-40CD-BE24-3197676E8A39}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="UPXDll\UPXRes.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="MainSource\UPXShell.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Default.Personality/>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="UPXRes">
+			<MSBuild Projects="UPXDll\UPXRes.dproj"/>
+		</Target>
+		<Target Name="UPXRes:Clean">
+			<MSBuild Targets="Clean" Projects="UPXDll\UPXRes.dproj"/>
+		</Target>
+		<Target Name="UPXRes:Make">
+			<MSBuild Targets="Make" Projects="UPXDll\UPXRes.dproj"/>
+		</Target>
+		<Target Name="UPXShell">
+			<MSBuild Projects="MainSource\UPXShell.dproj"/>
+		</Target>
+		<Target Name="UPXShell:Clean">
+			<MSBuild Targets="Clean" Projects="MainSource\UPXShell.dproj"/>
+		</Target>
+		<Target Name="UPXShell:Make">
+			<MSBuild Targets="Make" Projects="MainSource\UPXShell.dproj"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="UPXRes;UPXShell"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="UPXRes:Clean;UPXShell:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="UPXRes:Make;UPXShell:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>
