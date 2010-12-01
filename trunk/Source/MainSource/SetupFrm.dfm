@@ -29,7 +29,6 @@ object SetupForm: TSetupForm
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
-    ExplicitTop = 184
     object lblCommands: TLabel
       Left = 12
       Top = 8

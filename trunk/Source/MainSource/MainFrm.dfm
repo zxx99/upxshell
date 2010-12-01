@@ -738,9 +738,9 @@ object MainForm: TMainForm
             Caption = 'pnlProgressSize'
             TabOrder = 3
             object prbSize: TGauge
-              Left = 45
+              Left = 8
               Top = 2
-              Width = 216
+              Width = 253
               Height = 25
               BackColor = clBtnFace
               BorderStyle = bsNone
@@ -1786,7 +1786,6 @@ object MainForm: TMainForm
             ParentFont = False
             ShowAccelChar = False
             Transparent = True
-            Visible = False
             WordWrap = True
             OnClick = lblDownloadClick
           end
@@ -1854,7 +1853,7 @@ object MainForm: TMainForm
       Height = 19
       Panels = <
         item
-          Width = 80
+          Width = 250
         end
         item
           Width = 50

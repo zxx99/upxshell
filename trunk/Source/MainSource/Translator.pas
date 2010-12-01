@@ -9,7 +9,8 @@ uses
 function TranslateMsg(const Msg: string): string;
 procedure LoadLanguage(FormInstance: TForm);
 procedure TranslateForm(FormInstance: TForm);
-procedure DumpLanguage(FormInstance: TForm; const FileName: string; WriteMode: word; DumpMessages: boolean = False);
+procedure DumpLanguage(FormInstance: TForm; const FileName: string;
+  WriteMode: word; DumpMessages: boolean = False);
 procedure LocalizerMode(FormInstance: TForm; Enable: boolean);
 
 function GetComponentTree(Component: TComponent): string;
@@ -33,16 +34,17 @@ type
     Data: string;
     Kind: TTokenKind;
   end;
+
   TTokens = array of TToken;
 
 type
-	// This is a dummy container used to handle popup forms in
+  // This is a dummy container used to handle popup forms in
   // localization mode
   TDummyContainer = class
-	public
-		procedure LocalizationMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
+  public
+    procedure LocalizationMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: integer);
   end;
-
 
 function GetStringProperty(Component: TComponent;
   const PropName: string): string;
@@ -87,8 +89,8 @@ begin
     if PropInfo <> nil then
     begin
       TK := PropInfo^.PropType^.Kind;
-      if (TK = tkString) or (TK = tkLString) or (TK = tkWString)
-      or (TK = tkUString) then
+      if (TK = tkString) or (TK = tkLString) or (TK = tkWString) or
+        (TK = tkUString) then
       begin
         SetStrProp(AComp, PropInfo, AValue);
       end;
@@ -96,35 +98,33 @@ begin
   end;
 end;
 
-
-
-//======================================================================================
-{** Does the translation of predefined messages (declared as
-    msg[xxx]=??? in .lng file) **}
+// ======================================================================================
+{ ** Does the translation of predefined messages (declared as
+  msg[xxx]=??? in .lng file) ** }
 function TranslateMsg(const Msg: string): string;
 var
   I: integer;
 begin
-	Result := StringDecode(Msg);
-	for I := 1 to High(EngMsgs) do
-	begin
-//		if (Msg = EngMsgs[I]) and (Messages[I] <> '') then
-		if (Msg = EngMsgs[I]) then
+  Result := StringDecode(Msg);
+  for I := 1 to High(EngMsgs) do
+  begin
+    // if (Msg = EngMsgs[I]) and (Messages[I] <> '') then
+    if (Msg = EngMsgs[I]) then
     begin
       Result := StringDecode(Messages[I]);
       break;
     end;
   end;
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
+// ======================================================================================
 procedure AddMessage(Msg: string);
 
   function RemoveQuotes(const InStr: string): string;
   begin
-    //Commented out the '''' single quote detection. This has been requested.
-    if (InStr <> '') and (InStr[1] in ['"'{, ''''}]) then
+    // Commented out the '''' single quote detection. This has been requested.
+    if (InStr <> '') and (InStr[1] in ['"' { , '''' } ]) then
     begin
       Result := copy(InStr, 2, length(InStr) - 2);
     end
@@ -138,19 +138,19 @@ var
   posit, cut: integer;
 begin
   posit := Pos('[', Msg) + 1;
-  posit := StrToInt(Copy(Msg, posit, 3));
-  cut   := Pos('=', Msg);
+  posit := StrToInt(copy(Msg, posit, 3));
+  cut := Pos('=', Msg);
   Delete(Msg, 1, cut);
   Messages[posit] := RemoveQuotes(StringDecode(Msg));
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
+// ======================================================================================
 procedure SetProperty(const Tokens: TTokens);
 var
-  I:       integer;
-  trComp:  TComponent;
-  trProp:  string;
+  I: integer;
+  trComp: TComponent;
+  trProp: string;
   trValue: string;
 begin
   trComp := Application.FindComponent(Tokens[0].Data);
@@ -160,20 +160,20 @@ begin
     begin
       case Tokens[I].Kind of
         tkScoper:
-        begin
-          if trComp <> nil then
           begin
-            trComp := trComp.FindComponent(Tokens[I].Data);
+            if trComp <> nil then
+            begin
+              trComp := trComp.FindComponent(Tokens[I].Data);
+            end;
           end;
-        end;
         tkProperty:
-        begin
-          trProp := Tokens[I].Data;
-        end;
+          begin
+            trProp := Tokens[I].Data;
+          end;
         tkData:
-        begin
-          trValue := Tokens[I].Data;
-        end;
+          begin
+            trValue := Tokens[I].Data;
+          end;
       end;
     end;
   end;
@@ -195,10 +195,11 @@ begin
       MainForm.mnuHistory.Items[0].Caption := trValue;
     end;
   end;
-  //** This will allow multiline hints. This was a requested feature.
+  // ** This will allow multiline hints. This was a requested feature.
   if (trComp <> nil) and (lowercase(trProp) = 'hint') then
   begin
-    trValue := StringReplace(trValue, '\n', #13#10, [rfReplaceAll, rfIgnoreCase]);
+    trValue := StringReplace(trValue, '\n', #13#10,
+      [rfReplaceAll, rfIgnoreCase]);
     SetStringProperty(trComp, trProp, trValue);
   end
   else
@@ -206,14 +207,14 @@ begin
     SetStringProperty(trComp, trProp, trValue);
   end;
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
+// ======================================================================================
 procedure ParseLine(const Line: string);
 
   function Tokenize(const InStr: string): TTokens;
   var
-    I:     integer;
+    I: integer;
     level: integer;
     tKind: TTokenKind;
   begin
@@ -240,10 +241,10 @@ procedure ParseLine(const Line: string);
         end
         else
         begin
-          //Commented out the '''' single quote detection. This has been requested.
-          if (tKind = tkData) and (InStr[I] in ['"'{, ''''}]) then
+          // Commented out the '''' single quote detection. This has been requested.
+          if (tKind = tkData) and (InStr[I] in ['"' { , '''' } ]) then
           begin
-            //Do Nothing
+            // Do Nothing
           end
           else
           begin
@@ -260,10 +261,10 @@ begin
   tmp := Tokenize(Line);
   SetProperty(tmp);
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
- // Loads the file and scans strings one by one
+// ======================================================================================
+// Loads the file and scans strings one by one
 procedure LoadFile(const FileName: string; FormInstance: TForm);
 type
   TTokenKind = (tkUnknown, tkComment, tkMessage, tkTranslation);
@@ -271,7 +272,7 @@ type
   function GetTokenKind(Str: string): TTokenKind;
   begin
     Result := tkUnknown;
-    Str    := trim(Str);
+    Str := trim(Str);
     if Str <> '' then
     begin
       if (copy(Str, 1, 2) = '//') or (Str[1] = ';') then
@@ -296,9 +297,9 @@ type
   end;
 
 var
-  f:        textfile;
+  f: textfile;
   FormName: string;
-  Temp:     string;
+  Temp: string;
 begin
   FormName := FormInstance.Name;
   if FileExists(FileName) then
@@ -310,56 +311,56 @@ begin
       readln(f, Temp);
       case GetTokenKind(Temp) of
         tkTranslation:
-        begin
-          if Pos(FormName, Temp) <> 0 then
           begin
-            ParseLine(Temp);
+            if Pos(FormName, Temp) <> 0 then
+            begin
+              ParseLine(Temp);
+            end;
           end;
-        end;
         tkMessage:
-        begin
-          AddMessage(Temp);
-        end;
+          begin
+            AddMessage(Temp);
+          end;
       end;
     end;
     closefile(f);
   end;
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
+// ======================================================================================
 procedure LoadLanguage(FormInstance: TForm);
 begin
   SetCurrentDir(WorkDir + LanguageSubdir);
-  LoadFile(LangFile + '.lng', FormInstance); //Load .lng file for processing
+  LoadFile(LangFile + '.lng', FormInstance); // Load .lng file for processing
   SetCurrentDir(WorkDir);
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
+// ======================================================================================
 procedure TranslateForm(FormInstance: TForm);
- //Parses a text file
+// Parses a text file
   procedure ParseLine(InStr: string; out Form, Component, Prop, Value: string);
   var
     posit: integer;
   begin
-    posit     := Pos('.', InStr);
-    Form      := lowercase(trim(copy(InStr, 1, posit - 1)));
+    posit := Pos('.', InStr);
+    Form := lowercase(trim(copy(InStr, 1, posit - 1)));
     Delete(InStr, 1, posit);
-    posit     := Pos('.', InStr);
+    posit := Pos('.', InStr);
     Component := lowercase(trim(copy(InStr, 1, posit - 1)));
     Delete(InStr, 1, posit);
-    posit     := Pos('=', InStr);
-    Prop      := lowercase(trim(copy(InStr, 1, posit - 1)));
+    posit := Pos('=', InStr);
+    Prop := lowercase(trim(copy(InStr, 1, posit - 1)));
     Delete(InStr, 1, posit);
-    posit     := Pos('=', InStr);
+    posit := Pos('=', InStr);
     Delete(InStr, posit, 1);
-    Value     := StringDecode(Trim(InStr));
+    Value := StringDecode(trim(InStr));
   end;
 
 var
-  f:     textfile;
-  Line:  string;
+  f: textfile;
+  Line: string;
   Form, Component, Prop, Value: string;
   CompC: TComponent;
 begin
@@ -369,10 +370,10 @@ begin
   begin
     readln(f, Line);
     if StrLiComp(PChar(FormInstance.Name), PChar(Line),
-      Length(FormInstance.Name)) = 0 then
+      length(FormInstance.Name)) = 0 then
     begin
       ParseLine(Line, Form, Component, Prop, Value);
-      if not (FormInstance = nil) then
+      if not(FormInstance = nil) then
       begin
         CompC := FormInstance.FindComponent(Component);
         if CompC <> nil then
@@ -393,9 +394,8 @@ begin
             SetStringProperty(CompC, Prop, Value);
           end;
         end
-        else
-        if ((Prop = 'caption') and (lowercase(FormInstance.Name) = Form) and
-          (Component = '')) then
+        else if ((Prop = 'caption') and (lowercase(FormInstance.Name) = Form)
+            and (Component = '')) then
         begin
           FormInstance.Caption := Value;
         end;
@@ -404,15 +404,17 @@ begin
   end;
   closefile(f);
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
- // Dumps all form component's captions and hints into a language file
-procedure DumpLanguage(FormInstance: TForm; const FileName: string; WriteMode: word; DumpMessages: boolean = False);
+// ======================================================================================
+// Dumps all form component's captions and hints into a language file
+procedure DumpLanguage(FormInstance: TForm; const FileName: string;
+  WriteMode: word; DumpMessages: boolean = False);
 
-  procedure DumpComponent(Component: TComponent; const Properties: array of string; var fs: TFileStream);
+  procedure DumpComponent(Component: TComponent;
+    const Properties: array of string; var fs: TFileStream);
   var
-    I:   integer;
+    I: integer;
     Str: string;
     tmp: string;
   begin
@@ -424,12 +426,13 @@ procedure DumpLanguage(FormInstance: TForm; const FileName: string; WriteMode: w
     begin
       if Component.Tag = -1 then
       begin
-        Str := #13#10 + GetComponentTree(Component) + '.' + 'Caption' + '=' + StringEncode(TMenuItem(Component).Caption);
+        Str := #13#10 + GetComponentTree(Component)
+          + '.' + 'Caption' + '=' + StringEncode(TMenuItem(Component).Caption);
         fs.WriteBuffer(Str[1], length(Str));
       end;
     end
     else
-      // perform the generic save
+    // perform the generic save
     begin
       // save only if the Tag is *not* -1
       if Component.Tag <> -1 then
@@ -441,7 +444,7 @@ procedure DumpLanguage(FormInstance: TForm; const FileName: string; WriteMode: w
           if tmp <> '' then
           begin
             tmp[1] := UpperCase(tmp[1])[1];
-            Str    := #13#10 + Str + '.' + Properties[I] + '=' + StringEncode(tmp);
+            Str := #13#10 + Str + '.' + Properties[I] + '=' + StringEncode(tmp);
             fs.WriteBuffer(Str[1], length(Str));
           end;
         end;
@@ -458,18 +461,19 @@ procedure DumpLanguage(FormInstance: TForm; const FileName: string; WriteMode: w
     begin
       for I := 0 to TComboBox(Component).Items.Count - 1 do
       begin
-        Str := #13#10 + GetComponentTree(Component) + '.' + IntToStr(I) + '=' + StringEncode(TComboBox(Component).Items[I]);
+        Str := #13#10 + GetComponentTree(Component) + '.' + IntToStr(I)
+          + '=' + StringEncode(TComboBox(Component).Items[I]);
         fs.WriteBuffer(Str[1], length(Str));
       end;
     end;
   end;
 
 var
-  fs:      TFileStream;
-  I:       integer;
+  fs: TFileStream;
+  I: integer;
   Comment: string;
-  Msg:     string;
-  Quote:   string;
+  Msg: string;
+  Quote: string;
 begin
   fs := TFileStream.Create(FileName, WriteMode);
   try
@@ -478,7 +482,8 @@ begin
     // if we're staring a new file then output a generic header
     if fs.Position = 0 then
     begin
-      Comment := '; Automatic Language Dump generated at ' + DateTimeToStr(now) + #13#10 + '; Based on: ' + LangFile;
+      Comment := '; Automatic Language Dump generated at ' + DateTimeToStr(now)
+        + #13#10 + '; Based on: ' + LangFile;
       fs.WriteBuffer(Comment[1], length(Comment));
     end;
 
@@ -492,7 +497,8 @@ begin
       // again output a comment for tab sheets
       if FormInstance.Components[I] is TTabSheet then
       begin
-        Comment := #13#10 + chr(VK_TAB) + chr(VK_TAB) + '// ' + TTabSheet(FormInstance.Components[I]).Caption + ' Tab';
+        Comment := #13#10 + chr(VK_TAB) + chr(VK_TAB) + '// ' + TTabSheet
+          (FormInstance.Components[I]).Caption + ' Tab';
         fs.WriteBuffer(Comment[1], length(Comment));
       end;
       DumpComponent(FormInstance.Components[I], ['Caption', 'Hint'], fs);
@@ -515,7 +521,8 @@ begin
           Quote := '';
         end;
 
-        Msg := #13#10 + 'msg[' + Format('%.3d', [I]) + ']=' + Quote + StringEncode(Messages[I]) + Quote;
+        Msg := #13#10 + 'msg[' + Format('%.3d', [I])
+          + ']=' + Quote + StringEncode(Messages[I]) + Quote;
         fs.WriteBuffer(Msg[1], length(Msg));
       end;
     end;
@@ -523,76 +530,80 @@ begin
     FreeAndNil(fs);
   end;
 end;
- //======================================================================================
+// ======================================================================================
 
- //======================================================================================
+// ======================================================================================
 
 type
   TControlFriend = class(TControl);
- // When we go to localizer mode we create a context menu
- //======================================================================================
-procedure LocalizerMode(FormInstance: TForm; Enable: boolean);
+    // When we go to localizer mode we create a context menu
+    // ======================================================================================
+    procedure LocalizerMode(FormInstance: TForm; Enable: boolean);
 
-  procedure SetComponentPopup(Component: TComponent; Dummy: TDummyContainer);
-  begin
-    // first let's see if the component has a caption or a hint properties
-    if PropertyExists(Component, 'caption') or
-      PropertyExists(Component, 'hint') then
+    procedure SetComponentPopup(Component: TComponent; Dummy: TDummyContainer);
     begin
-      // now let's see if our component is a TControl descendant and actually
-      // has an OnMouseUp event sink
+      // first let's see if the component has a caption or a hint properties
+      if PropertyExists(Component, 'caption') or PropertyExists(Component,
+        'hint') then
+      begin
+        // now let's see if our component is a TControl descendant and actually
+        // has an OnMouseUp event sink
+        if Component is TControl then
+        begin
+          TControlFriend(Component).OnMouseUp := Dummy.LocalizationMouseUp;
+          // Set the Component to visible, else they can't translate the control.
+          TControlFriend(Component).Visible := True;
+        end;
+      end;
+    end;
+
+    // remove those popups set by previous routine
+    procedure RemoveComponentPopup(Component: TComponent
+      { ; Dummy: TDummyContainer } );
+    begin
       if Component is TControl then
       begin
-        TControlFriend(Component).OnMouseUp := Dummy.LocalizationMouseUp;
-        //Set the Component to visible, else they can't translate the control.
-        TControlFriend(Component).Visible   := True;
+        TControlFriend(Component).OnMouseUp := nil;
       end;
     end;
-  end;
 
-  // remove those popups set by previous routine
-	procedure RemoveComponentPopup(Component: TComponent{; Dummy: TDummyContainer});
+  var
+    I: integer;
+    Dummy: TDummyContainer;
   begin
-    if Component is TControl then
+    if Enable then
     begin
-      TControlFriend(Component).OnMouseUp := nil;
-    end;
-  end;
+      // this dummy will leak memory, since it will never be released.
+      // maybe add a global stack of dummies if this poses a real problem
+      // which it should not since the localizer mode isn't used real often
+      Dummy := TDummyContainer.Create();
 
-var
-  I:     integer;
-  Dummy: TDummyContainer;
-begin
-  if Enable then
-  begin
-    // this dummy will leak memory, since it will never be released.
-    // maybe add a global stack of dummies if this poses a real problem
-    // which it should not since the localizer mode isn't used real often
-    Dummy := TDummyContainer.Create();
-
-    for I := 0 to FormInstance.ComponentCount - 1 do
-    begin
-      if (FormInstance.Components[I].Tag <> -1) and (FormInstance.Components[I].Tag <> -2) then
+      for I := 0 to FormInstance.ComponentCount - 1 do
       begin
-        SetComponentPopup(FormInstance.Components[I], Dummy);
+        if (FormInstance.Components[I].Tag <> -1) and
+          (FormInstance.Components[I].Tag <> -2) then
+        begin
+          SetComponentPopup(FormInstance.Components[I], Dummy);
+        end;
+      end;
+    end
+    else
+    begin
+      for I := 0 to FormInstance.ComponentCount - 1 do
+      begin
+        RemoveComponentPopup(FormInstance.Components[I] { , nil } );
       end;
     end;
-  end
-  else
-  begin
-    for I := 0 to FormInstance.ComponentCount - 1 do
-    begin
-      RemoveComponentPopup(FormInstance.Components[I]{, nil});
-    end;
   end;
-end;
- //======================================================================================
+  // ======================================================================================
 
- { TDummyContainer }
- //======================================================================================
-procedure TDummyContainer.LocalizationMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
+  { TDummyContainer }
+  // ======================================================================================
+  procedure TDummyContainer.LocalizationMouseUp(Sender: TObject;
+    Button: TMouseButton; Shift: TShiftState; X, Y: integer);
 
   function GetControlProps(Control: TControl): TComponentProperties;
+
   var
     I: integer;
   begin
@@ -609,14 +620,14 @@ procedure TDummyContainer.LocalizationMouseUp(Sender: TObject; Button: TMouseBut
         Result.Properties[I].Value := GetStringProperty(Control, 'Hint');
         for I := 0 to I - 1 do
         begin
-          Result.Properties[I].Name  := IntToStr(I);
+          Result.Properties[I].Name := IntToStr(I);
           Result.Properties[I].Value := TComboBox(Control).Items[I];
         end;
       end
       else
       begin
         SetLength(Result.Properties, 1);
-        Result.Properties[0].Name  := 'Hint';
+        Result.Properties[0].Name := 'Hint';
         Result.Properties[0].Value := GetStringProperty(Control, 'Hint');
       end;
     end
@@ -628,12 +639,11 @@ procedure TDummyContainer.LocalizationMouseUp(Sender: TObject; Button: TMouseBut
         // if the control is a panel and has a TabSheet parent and an
         // alClient alignment, then we redirect it's click to the parent sheet
         SetLength(Result.Properties, 2);
-        Result.Properties[0].Name  := 'Caption';
-        Result.Properties[0].Value :=
-          GetStringProperty(Control.Parent, 'Caption');
-        Result.Properties[1].Name  := 'Hint';
-        Result.Properties[1].Value :=
-          GetStringProperty(Control.Parent, 'Hint');
+        Result.Properties[0].Name := 'Caption';
+        Result.Properties[0].Value := GetStringProperty(Control.Parent,
+          'Caption');
+        Result.Properties[1].Name := 'Hint';
+        Result.Properties[1].Value := GetStringProperty(Control.Parent, 'Hint');
       end
       else
       begin
@@ -644,22 +654,24 @@ procedure TDummyContainer.LocalizationMouseUp(Sender: TObject; Button: TMouseBut
         begin
           Inc(I);
           SetLength(Result.Properties, I);
-          Result.Properties[I - 1].Name  := 'Caption';
-          Result.Properties[I - 1].Value :=
-            GetStringProperty(Control, 'Caption');
+          Result.Properties[I - 1].Name := 'Caption';
+          Result.Properties[I - 1].Value := GetStringProperty(Control,
+            'Caption');
         end;
         if PropertyExists(Control, 'Hint') then
         begin
           Inc(I);
           SetLength(Result.Properties, I);
-          Result.Properties[I - 1].Name  := 'Hint';
+          Result.Properties[I - 1].Name := 'Hint';
           Result.Properties[I - 1].Value := GetStringProperty(Control, 'Hint');
         end;
       end;
     end;
   end;
 
-  procedure SetControlProps(Control: TControl; const Props: TComponentProperties);
+  procedure SetControlProps(Control: TControl;
+    const Props: TComponentProperties);
+
   var
     I: integer;
   begin
@@ -701,22 +713,22 @@ procedure TDummyContainer.LocalizationMouseUp(Sender: TObject; Button: TMouseBut
     end;
   end;
 
-var
-  Localizer: TLocalizerForm;
-begin
-  if Button = mbRight then
+  var
+    Localizer: TLocalizerForm;
   begin
-    Localizer := TLocalizerForm.Create(nil);
-    try
-      Localizer.FMode := lfmProperties;
-      Localizer.FControl := GetControlProps(TControl(Sender));
-      Localizer.ShowModal();
-      SetControlProps(TControl(Sender), Localizer.FControl);
-    finally
-      Localizer.Release()
+    if Button = mbRight then
+    begin
+      Localizer := TLocalizerForm.Create(nil);
+      try
+        Localizer.FMode := lfmProperties;
+        Localizer.FControl := GetControlProps(TControl(Sender));
+        Localizer.ShowModal();
+        SetControlProps(TControl(Sender), Localizer.FControl);
+      finally
+        Localizer.Release()
+      end;
     end;
   end;
-end;
-//======================================================================================
+  // ======================================================================================
 
 end.

@@ -1,28 +1,4 @@
-{ *
-  UPX Shell
-  Copyright ?2000-2006, ION Tek
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  * }
-
-{ **************--===ION Tek===--**************** }
-{ Compression unit }
-{ Note that major difference from previous }
-{ version is that this is no more a separate }
-{ thread! }
-{ *********************************************** }
 unit Compression;
 
 interface
@@ -393,7 +369,6 @@ var
   ProcInfo: TProcessInformation;
   lpExitCode: cardinal;
   CompResult: TCompResult;
-  IsMultiProgress: boolean;
 begin
   ResetVisuals;
   CalcFileSize;
@@ -417,7 +392,7 @@ begin
   FindWin; // Hide console window if it still shows
   if Compress = cdCompress then
   begin
-    GetProgress(ProcInfo, IsMultiProgress);
+    GetProgress(ProcInfo, False);
   end;
   Waitforsingleobject(ProcInfo.hProcess, infinite);
   GetExitCodeProcess(ProcInfo.hProcess, lpExitCode);
@@ -450,15 +425,14 @@ begin
     SetStatusTest(lpExitCode);
   end;
   ExtractUPX(edDelete);
-  if AlreadyPacked then
-  // This one checks if the file is compressed and sets checkbox
+  if IsAppPacked(GlobFileName) then
   begin
     MainForm.chkDecomp.Checked := True;
-    sUPXVersion := GetUPXBuild(GlobFileName);
+    //sUPXVersion := GetUPXBuild(GlobFileName);
   end
   else
   begin
-    sUPXVersion := '';
+    //sUPXVersion := '';
     MainForm.chkDecomp.Checked := False;
     MainForm.cmbUPX.ItemIndex := bStdUPXVersion;
   end;

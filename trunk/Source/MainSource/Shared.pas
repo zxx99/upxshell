@@ -7,8 +7,9 @@ uses
 
 procedure Split(const Delimiter: char; const Input: string;
   const Strings: TStrings);
-function GetPriority: cardinal; // Gets priority selected on the SetupForm
-function AlreadyPacked: boolean;
+function GetPriority: cardinal;
+
+function IsAppPacked(aApp: string): boolean;
 
 function GetCompressParams: string;
 
@@ -25,12 +26,16 @@ procedure CalcFileSize;
 
 procedure WriteLog(Const InStr: String);
 
-
-
 function IsNumeric(const InStr: string): boolean;
 function PropertyExists(Component: TComponent; const PropName: string): boolean;
 function StringEncode(const InStr: string): string;
 function StringDecode(const InStr: string): string;
+
+//获取字符串在byte数组中的位置，大小从1开始，aBytes[0]匹配返回值为1 !!!!!
+function AnsiStrInByteArrayPos(aStr: AnsiString; aBytes: PByte; aByteLen: Integer): integer;
+
+function GetUPXBuild(const FilePath: string): string;
+
 
 implementation
 
@@ -86,37 +91,29 @@ begin
 end;
 
 // Analyzes the file to check if it's already compressed
-function AlreadyPacked: boolean;
+function IsAppPacked(aApp: string): boolean;
 var
   f: TFileStream;
-  GlobalChain: array [1 .. $3F0] of AnsiChar;
+  aBuff: array [1 .. $3F0] of Byte;
 begin
   Result := False;
 
   try
-    f := TFileStream.Create(GlobFileName, fmOpenRead);
+    f := TFileStream.Create(aApp, fmOpenRead);
     f.Position := 0;
     try
-      f.ReadBuffer(GlobalChain, $3EF);
+      f.ReadBuffer(aBuff, $3EF);
     except
       on E: Exception do
       begin
         Application.MessageBox(PChar(TranslateMsg(
               'Could not access file. It may be allready open!')),
           PChar(TranslateMsg('Error')), MB_ICONERROR or MB_OK);
+        Exit;
       end;
     end;
+    Result := (AnsiStrInByteArrayPos('UPX', @aBuff[1], $3EF) <> 0);
 
-
-
-    if pos('UPX', GlobalChain) <> 0 then
-    begin
-      Result := True;
-    end
-    else
-    begin
-      Result := False;
-    end;
     // offset $34b... test the typical string in .EXE & .DLL 'This file is packed with the UPX'
     // offset $1F9... test string in .SCR 'This file is packed with the UPX'
     // offset $55... string 'UPX' in .COM
@@ -228,7 +225,7 @@ var
 begin
   if GlobFileName <> '' then
   begin
-    if AlreadyPacked then
+    if IsAppPacked(GlobFileName) then
     begin
       Scrambled := fScrambleUPX(GlobFileName);
       if Scrambled then
@@ -416,7 +413,7 @@ begin
   Result := True;
   for I := 1 to length(InStr) do
   begin
-    if not(InStr[I] in ['1' .. '9', '0']) then
+    if not CharInSet(InStr[I], ['1' .. '9', '0']) then
     begin
       Result := False;
       break;
@@ -472,6 +469,83 @@ begin
       Result[I + 1] := #10;
     end;
   end;
+end;
+
+function AnsiStrInByteArrayPos(aStr: AnsiString; aBytes: PByte;
+  aByteLen: Integer): integer;
+var
+  i: Integer;
+  aStrLen: Integer;
+  j: Integer;
+  bIn: Boolean;
+begin
+  Result := 0;
+
+  aStrLen := Length(aStr);
+  if aStrLen = 0 then Exit;
+
+  for i := 0 to aByteLen - aStrLen do
+  begin
+    bIn := True;
+    for j := 1 to aStrLen do
+    begin
+      if Pbyte(integer(aBytes) + i + j - 1)^ <> Byte(AnsiChar(aStr[j])) then
+      begin
+        bIn := False;
+        Break;
+      end;
+    end;
+    if bIn then
+    begin
+      Result := i + 1;
+      Exit;
+    end;
+  end;
+
+
+end;
+
+
+
+{ *****************************************
+  * This Function extracts the UPX Version *
+  ***************************************** }
+function GetUPXBuild(const FilePath: string): string;
+const
+  offsets: array [1 .. 7] of int64 = ($1F0, $3DB, $39D, $320, $281, $259, $261);
+var
+  fStream: TFileStream;
+  aBuff: array [1 .. 4] of AnsiChar; // This will contain something like '1.20'  begin
+  I: integer;
+  upxVersion: single;
+  aStr: string;
+begin
+  Result := '';
+
+  if FileExists(FilePath) then
+  begin
+    try
+      fStream := TFileStream.Create(FilePath, fmOpenRead);
+      for I := Low(offsets) to High(offsets) do
+      begin
+        fStream.Position := 1;
+        fStream.Seek(offsets[I], soFromBeginning);
+        fStream.ReadBuffer(aBuff, $4);
+        if CharInSet(AnsiChar(aBuff[1]), ['0'..'9', '.']) then
+        begin
+          aStr := string(AnsiString(aBuff));
+          if (TryStrToFloat(aStr, upxVersion)) then
+          begin
+            Result := aStr;
+            Break;
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(fStream);
+    end;
+  end;
+
 end;
 
 end.
