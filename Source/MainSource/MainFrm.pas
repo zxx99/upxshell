@@ -155,10 +155,6 @@ uses SysUtils, ShlObj, Wininet, ShellAPI,
   Globals, Translator, Compression, Shared, UPXScrambler,
   MultiFrm, SetupFrm, LocalizerFrm;
 {$R *.dfm}
-{ *************************************************
-  First list all the non-form procedures/functions
-  This becouse of dependency's
-  ************************************************* }
 
 { ** This procedure loads application settings from the registry ** }
 procedure LoadSettings;
@@ -567,13 +563,13 @@ begin
     // Check if the setup calls to (Un)Register the extensions.
     if ParamStr(I) = '--SETUP-REGEXT' then
     begin
-      LoadLanguage(MainForm);
+      LoadLanguage(self);
       IntergrateContext([doSetup, extRegister]);
       Application.Terminate;
     end
     else if ParamStr(I) = '--SETUP-UNREGEXT' then
     begin
-      LoadLanguage(MainForm);
+      LoadLanguage(self);
       IntergrateContext([doSetup, extUnRegister]);
       Application.Terminate;
     end;
@@ -640,8 +636,13 @@ end;
 { ** ** }
 procedure TMainForm.imgHistoryMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
+var
+  aPt: TPoint;
 begin
-  mnuHistory.Popup(x, y);
+  aPt.X := x;
+  aPt.Y := y;
+  aPt := imgHistory.ClientToScreen(aPt);
+  mnuHistory.Popup(aPt.X + 3, aPt.Y + 2);
 
 end;
 
@@ -781,7 +782,7 @@ begin
   RegValue.Str := trim(TranslateMsg('Compress with UPX'));
   StoreKey('OldContext', RegValue, ktString);
   LangFile := cmbLanguage.Text;
-  LoadLanguage(MainForm);
+  LoadLanguage(self);
   TrackBest;
   if SetupForm.chkIntegrate.Checked then
   begin
@@ -793,7 +794,7 @@ end;
 { ** ** }
 procedure TMainForm.FormActivate(Sender: TObject);
 begin
-  LoadLanguage(MainForm);
+  LoadLanguage(Self);
   FillUPXVersionsBox;
   // Checks the position of CompressionLevel TrackBar
   TrackBest;
@@ -824,12 +825,10 @@ begin
     SW_SHOWNORMAL);
 end;
 
-{ ** ** }
 procedure TMainForm.btnMultiPckClick(Sender: TObject);
 begin
   MultiForm := TMultiForm.Create(self);
   try
-    // 1: Fix by KIRILL on 12.03.2003
     MainForm.Hide;
     MultiForm.ShowModal;
     MainForm.Show;

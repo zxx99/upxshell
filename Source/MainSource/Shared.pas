@@ -1,6 +1,3 @@
-{ *
-}
-
 unit Shared;
 
 interface
@@ -22,15 +19,14 @@ procedure DrawGradient(const DrawCanvas: TCanvas; const ColorCycles, Height,
   Width: integer; const StartColor, EndColor: TColor);
 function ProcessSize(const Size: integer): string;
 function GetFileSize(const FileName: string): integer;
-procedure SetStringProperty(AComp: TComponent; const APropName: string;
-  const AValue: string);
+
 procedure CalcFileSize;
 
 
 procedure WriteLog(Const InStr: String);
-function GetComponentTree(Component: TComponent): string;
-function GetStringProperty(Component: TComponent;
-  const PropName: string): string;
+
+
+
 function IsNumeric(const InStr: string): boolean;
 function PropertyExists(Component: TComponent; const PropName: string): boolean;
 function StringEncode(const InStr: string): string;
@@ -370,27 +366,7 @@ begin
   FindClose(sr);
 end;
 
-{ ** ** }
-procedure SetStringProperty(AComp: TComponent; const APropName: string;
-  const AValue: string);
-var
-  PropInfo: PPropInfo;
-  TK: TTypeKind;
-begin
-  if AComp <> nil then
-  begin
-    PropInfo := GetPropInfo(AComp.ClassInfo, APropName);
-    if PropInfo <> nil then
-    begin
-      TK := PropInfo^.PropType^.Kind;
-      if (TK = tkString) or (TK = tkLString) or (TK = tkWString)
-      or (TK = tkUString) then
-      begin
-        SetStrProp(AComp, PropInfo, AValue);
-      end;
-    end;
-  end;
-end;
+
 
 { ** Calculates file size ** }
 procedure CalcFileSize;
@@ -432,36 +408,6 @@ begin
   end;
 end;
 
-function GetStringProperty(Component: TComponent;
-  const PropName: string): string;
-var
-  PropInfo: PPropInfo;
-  TK: TTypeKind;
-begin
-  Result := '';
-  PropInfo := GetPropInfo(Component.ClassInfo, PropName);
-  if PropInfo <> nil then
-  begin
-    TK := PropInfo^.PropType^.Kind;
-    if (TK = tkString) or (TK = tkLString) or (TK = tkWString) then
-    begin
-      Result := GetStrProp(Component, PropInfo);
-    end;
-  end;
-end;
-
-function GetComponentTree(Component: TComponent): string;
-var
-  Owner: TComponent;
-begin
-  Result := Component.Name;
-  Owner := Component.Owner;
-  while Owner <> Application do
-  begin
-    Result := Owner.Name + '.' + Result;
-    Owner := Owner.Owner;
-  end;
-end;
 
 function IsNumeric(const InStr: string): boolean;
 var

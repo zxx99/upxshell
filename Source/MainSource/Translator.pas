@@ -1,25 +1,3 @@
-{*
-    UPX Shell
-    Copyright © 2000-2006, ION Tek
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*}
-
- {**************--===ION Tek===--****************}
- { Translator engine unit                        }
- {***********************************************}
 unit Translator;
 
 interface
@@ -33,6 +11,12 @@ procedure LoadLanguage(FormInstance: TForm);
 procedure TranslateForm(FormInstance: TForm);
 procedure DumpLanguage(FormInstance: TForm; const FileName: string; WriteMode: word; DumpMessages: boolean = False);
 procedure LocalizerMode(FormInstance: TForm; Enable: boolean);
+
+function GetComponentTree(Component: TComponent): string;
+function GetStringProperty(Component: TComponent;
+  const PropName: string): string;
+procedure SetStringProperty(AComp: TComponent; const APropName: string;
+  const AValue: string);
 
 implementation
 
@@ -56,9 +40,62 @@ type
   // localization mode
   TDummyContainer = class
 	public
-		{FFormProperties: TFormProperties;}
 		procedure LocalizationMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
   end;
+
+
+function GetStringProperty(Component: TComponent;
+  const PropName: string): string;
+var
+  PropInfo: PPropInfo;
+  TK: TTypeKind;
+begin
+  Result := '';
+  PropInfo := GetPropInfo(Component.ClassInfo, PropName);
+  if PropInfo <> nil then
+  begin
+    TK := PropInfo^.PropType^.Kind;
+    if (TK = tkString) or (TK = tkLString) or (TK = tkWString) then
+    begin
+      Result := GetStrProp(Component, PropInfo);
+    end;
+  end;
+end;
+
+function GetComponentTree(Component: TComponent): string;
+var
+  Owner: TComponent;
+begin
+  Result := Component.Name;
+  Owner := Component.Owner;
+  while Owner <> Application do
+  begin
+    Result := Owner.Name + '.' + Result;
+    Owner := Owner.Owner;
+  end;
+end;
+
+procedure SetStringProperty(AComp: TComponent; const APropName: string;
+  const AValue: string);
+var
+  PropInfo: PPropInfo;
+  TK: TTypeKind;
+begin
+  if AComp <> nil then
+  begin
+    PropInfo := GetPropInfo(AComp.ClassInfo, APropName);
+    if PropInfo <> nil then
+    begin
+      TK := PropInfo^.PropType^.Kind;
+      if (TK = tkString) or (TK = tkLString) or (TK = tkWString)
+      or (TK = tkUString) then
+      begin
+        SetStrProp(AComp, PropInfo, AValue);
+      end;
+    end;
+  end;
+end;
+
 
 
 //======================================================================================
