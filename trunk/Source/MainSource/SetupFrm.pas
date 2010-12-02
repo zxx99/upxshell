@@ -52,7 +52,7 @@ implementation
 uses
   SysUtils,
   Shared, Translator, Globals,
-  MainFrm, CommandsFrm;
+  MainFrm, CommandsFrm, uUpxHandle;
 {$R *.dfm}
 
 { ** This procedure loads advanced application settings from the registry ** }
@@ -193,9 +193,30 @@ end;
 
 { ** ** }
 procedure TSetupForm.btnScrambleClick(Sender: TObject);
+var
+  aUpxHandle: TUPXHandle;
 begin
-  ScrambleUPX;
-  SetupForm.Close;
+  aUpxHandle := TUPXHandle.Create;
+  try
+    aUpxHandle.FileName := GlobFileName;
+    if not aUpxHandle.IsFilePacked then
+    begin
+      if Application.MessageBox(PChar(TranslateMsg(
+            'This file doesn''t seem to be packed. Run the Scrambler?')),
+        PChar(TranslateMsg('Confirmation')), MB_YESNO + MB_ICONEXCLAMATION)
+        <> idYes then
+      begin
+        Exit;
+      end;
+    end;
+    aUpxHandle.ScramblerFile;
+
+    Application.MessageBox(PChar(TranslateMsg(' & scrambled')),
+      PChar(TranslateMsg('OK')));
+
+  finally
+    aUpxHandle.Free;
+  end;
 end;
 
 { ** ** }

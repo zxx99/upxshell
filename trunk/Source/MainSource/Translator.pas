@@ -64,6 +64,40 @@ begin
   end;
 end;
 
+
+function IsNumeric(const InStr: string): boolean;
+var
+  I: integer;
+begin
+  Result := True;
+  for I := 1 to length(InStr) do
+  begin
+    if not CharInSet(InStr[I], ['1' .. '9', '0']) then
+    begin
+      Result := False;
+      break;
+    end;
+  end;
+end;
+
+
+function PropertyExists(Component: TComponent; const PropName: string): boolean;
+var
+  PropInfo: PPropInfo;
+  TK: TTypeKind;
+begin
+  Result := False;
+  PropInfo := GetPropInfo(Component.ClassInfo, PropName);
+  if PropInfo <> nil then
+  begin
+    TK := PropInfo^.PropType^.Kind;
+    if (TK = tkString) or (TK = tkLString) or (TK = tkWString) then
+    begin
+      Result := True;
+    end;
+  end;
+end;
+
 function GetComponentTree(Component: TComponent): string;
 var
   Owner: TComponent;

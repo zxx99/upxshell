@@ -10,16 +10,16 @@ const
   EngMsgs: array [1 .. MsgCount] of string = (
     'Could not access file. It may be allready open',
     'The file attribute is set to ReadOnly. To proceed it must be unset. Continue?',
-    'Best', //3
+    'Best',                                 //3
     'This file doesn''t seem to be packed. Run the Scrambler?', //4
-    ' (in ', //5
-    ' seconds)',//6
-    'decompress',//7
-    'compress', //8
-    'There is nothing to ',//9
-    'N/A',  //10
-    'No directory selected', //11
-    '...update failed :-(',  //12
+    ' (in ',                                //5
+    ' seconds)',                            //6
+    'decompress',                           //7
+    'compress',                             //8
+    'There is nothing to ',                 //9
+    'N/A',                                  //10
+    'No directory selected',                //11
+    '...update failed :-(',                 //12
     'Could not connect to update server!',  //13
     'Updated version of product found!',    //14
     'Parsing update file...',               //15

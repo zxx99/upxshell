@@ -3,9 +3,11 @@ unit uUpxHandle;
 interface
 
 uses
-  Classes, SysUtils, Windows, Forms, Math;
+  Classes, SysUtils, Windows, Forms, Math, uUpxResAPI;
 
 type
+
+  EUpxHandle = Exception;
 
   TOnUpxProgress = procedure(aProgress: Integer; aFileSize: int64) of object;
 
@@ -21,12 +23,11 @@ type
     FIsCompressRC: Boolean;
     FIsTestAfterCompression: Boolean;
     FCustomParam: string;
-    FFileSize: int64;
     FStdOut: THandle;
-    FUpxResName: string;
     FCompressPriority: Cardinal;
     FIsDebugMode: Boolean;
     FOnUpxProgress: TOnUpxProgress;
+    FUpxVersion: TUPXVersions;
 
     procedure SetCompressIconLevel(const Value: Integer);
     procedure SetCompressLevel(const Value: Integer);
@@ -38,26 +39,32 @@ type
     procedure SetIsStripRelocation(const Value: Boolean);
     procedure SetIsTestAfterCompression(const Value: Boolean);
     procedure SetCustomParam(const Value: string);
-    procedure SetUpxResName(const Value: string);
     procedure SetCompressPriority(const Value: Cardinal);
     procedure SetIsDebugMode(const Value: Boolean);
     procedure SetOnUpxProgress(const Value: TOnUpxProgress);
+    procedure SetUpxVersion(const Value: TUPXVersions);
   protected
-    function GetUpxName: string; virtual;
+    procedure RaiseError(aError: string);
+    function GetUpxName: string;
+    procedure ExtractUPX;
+    procedure DelUpx;
 
-    function GetCompressParam: string;
+    function GetCompressParam: string; virtual;
     function GetDeCompressParam: string;
-
-    function GetFileSize(aFile: string): int64;
     procedure AllocateConsole;
     procedure HideConsole;
-    procedure GetProgress(ProcInfo: TProcessInformation;
-      const IsMultiProgress: Boolean);
+    procedure GetProgress(ProcInfo: TProcessInformation);
 
     function DoWork(IsCompress: Boolean): Integer;
+    procedure DoScramblerFile;
   public
     function CompressFile: Integer;
     function DeCompressFile: Integer;
+
+    procedure ScramblerFile;
+    function IsFilePacked(): boolean;
+
+    function GetErrorText: string;
 
     property FileName: string read FFileName write SetFileName;
 
@@ -78,10 +85,7 @@ type
     property IsCompressExport: Boolean read FIsCompressExport write
       SetIsCompressExport;
     property IsDebugMode: Boolean read FIsDebugMode write SetIsDebugMode;
-
-    property UpxResName: string read FUpxResName write SetUpxResName;
-
-    property FileSize: int64 read FFileSize;
+    property UpxVersion: TUPXVersions read FUpxVersion write SetUpxVersion;
 
     property OnUpxProgress: TOnUpxProgress read FOnUpxProgress write
       SetOnUpxProgress;
@@ -89,7 +93,8 @@ type
 
 implementation
 
-uses uUpxResAPI, Translator;
+uses Shared, Translator;
+
 
 { TUPXHandle }
 
@@ -113,23 +118,9 @@ begin
   Strings.DelimitedText := Input;
 end;
 
-function TUPXHandle.GetFileSize(aFile: string): int64;
-var
-  sr: TSearchRec;
-begin
-  if FindFirst(aFile, faAnyFile, sr) = 0 then
-  begin
-    Result := sr.Size;
-  end
-  else
-  begin
-    Result := -1;
-  end;
-  SysUtils.FindClose(sr);
-end;
 
-procedure TUPXHandle.GetProgress(ProcInfo: TProcessInformation;
-  const IsMultiProgress: Boolean);
+
+procedure TUPXHandle.GetProgress(ProcInfo: TProcessInformation);
 var
   EC: Cardinal;
   BracketOffsetStart: Integer;
@@ -137,29 +128,31 @@ var
   upxProgressBarStart: Integer;
   upxProgressBarSize: Integer;
   upxProgressBar: string;
-  upxCurProgressBarPos: Integer; // This is filled by the LastPos function located in Globals.
-  upxTotalProgress: Integer; // This will hold the total amount of * to be counted when in MultiProgress.
+  // This is filled by the LastPos function located in Globals.
+  upxCurProgressBarPos: Integer;
+  // This will hold the total amount of * to be counted when in MultiProgress.
+  upxTotalProgress: Integer;
   upxCurrentProgress: Integer;
-  OldAppTitle: string;
 
   ProgressValue: Integer;
   CompressSize: string;
-  MultiRepeat: TStringList;
   CursorPos: TCoord;
   CharsRead: DWord;
   Line: array [0 .. 500] of char;
+  i: integer;
 begin
+
   GetExitCodeProcess(ProcInfo.hProcess, EC);
-  OldAppTitle := Application.Title;
+
   CursorPos.X := 0;
   CursorPos.Y := 0;
   BracketOffsetStart := 0;
+  BracketOffsetEnd := 0;
   upxProgressBarStart := 0;
   upxProgressBarSize := 0;
   upxTotalProgress := 0;
-  MultiRepeat := TStringList.Create;
-
-  while True do // Let's find where the progress starts
+  // Let's find where the progress starts
+  while True do
   begin
     ReadConsoleOutputCharacter(FStdOut, Line, 80, CursorPos, CharsRead);
     BracketOffsetStart := Pos('[', Line) - 1;
@@ -187,56 +180,55 @@ begin
   end;
 
   // Here we go and check the progress of the compression
-  while EC > 2 do // ec >= STILL_ACTIVE
+  while EC = STILL_ACTIVE do
   begin
     ReadConsoleOutputCharacter(FStdOut, Line, 80, CursorPos, CharsRead);
+
     if Line[BracketOffsetStart] = '[' then
     begin
       CompressSize := '';
       upxProgressBar := Copy(Line, upxProgressBarStart + 1, upxProgressBarSize);
       upxCurProgressBarPos := LastPos('*', upxProgressBar);
 
-      if IsMultiProgress then
+      if upxTotalProgress = 0 then
       begin
-        Split('/', Trim(Copy(Line, BracketOffsetStart - 7, 6)), MultiRepeat);
-        if upxTotalProgress = 0 then
+        upxTotalProgress := upxProgressBarSize;
+      end;
+      upxCurrentProgress := upxCurProgressBarPos;
+
+      try
+        ProgressValue := floor((upxCurrentProgress / upxTotalProgress) * 100);
+        CompressSize := '';
+        for i := BracketOffsetEnd + 1 to 500 - 1 do
         begin
-          upxTotalProgress := (StrToInt(MultiRepeat[1]) * upxProgressBarSize);
+          if Line[i] = '%' then
+            Break;
+          CompressSize := CompressSize + Line[i];
         end;
-        upxCurrentProgress := (((StrToInt(MultiRepeat[0]) - 1)
-              * upxProgressBarSize) + upxCurProgressBarPos);
-      end
-      // ELSE NO MULTIPROGRESS
-      else
-      begin
-        if upxTotalProgress = 0 then
+
+        CompressSize := Trim(CompressSize);
+        if Assigned(FOnUpxProgress) then
+          FOnUpxProgress(ProgressValue, Round(StrToFloat(CompressSize)));
+
+        // Here we do some sleeping so we won't hogg the system.
+        sleep(10);
+        Application.ProcessMessages;
+        if ProgressValue >= 100 then
         begin
-          upxTotalProgress := upxProgressBarSize;
+          Exit;
         end;
-        upxCurrentProgress := upxCurProgressBarPos;
+      except
+        on e: Exception do
+        begin
+          Break;
+        end;
       end;
 
-      // Calculate the current progress to show to the user.
-      ProgressValue := floor((upxCurrentProgress / upxTotalProgress) * 100);
-
-      // The percentage of the compression on the file.
-      CompressSize := Line[69] + Line[70] + Line[71] + Line[72];
-
-      Application.Title := OldAppTitle + ' - ' + IntToStr(ProgressValue) + '%';
-      if Assigned(FOnUpxProgress) then
-        FOnUpxProgress(Round(StrToFloat(CompressSize)), ProgressValue);
-
-      // Here we do some sleeping so we won't hogg the system.
-      sleep(50);
-      Application.ProcessMessages;
-      if ProgressValue >= 100 then
-      begin
-        Exit;
-      end;
     end;
     GetExitCodeProcess(ProcInfo.hProcess, EC);
   end;
-  Application.Title := OldAppTitle;
+
+
 end;
 
 procedure TUPXHandle.AllocateConsole;
@@ -270,17 +262,73 @@ begin
   Result := DoWork(False);
 end;
 
+procedure TUPXHandle.DelUpx;
+begin
+  Deletefile(PChar(ExtractFilePath(ParamStr(0)) + GetUpxName));
+end;
+
+procedure TUPXHandle.DoScramblerFile;
+var
+  fsSource: TFileStream;
+  GlobalChain: array [1 .. $2BE0] of Byte;
+  FileSize: Int64;
+
+  function ReplaceUpxStr(aOld, aNew: AnsiString; aNewLen: Integer): Boolean;
+  var
+    PosString: integer;
+  begin
+    PosString := AnsiStrInByteArrayPos(aOld, @GlobalChain[1], $2BE0);
+    Result := PosString <> 0;
+    if Result then
+    begin
+      fsSource.Position := PosString - 1;
+      fsSource.Write(aNew[1], aNewLen);
+    end;
+  end;
+begin
+  fsSource := TFileStream.Create(FileName, fmOpenReadWrite);
+  try
+    if fsSource.Size < $2BE0 then
+      FileSize := fsSource.Size
+    else
+      FileSize := $2BE0;
+
+    fsSource.Position := 0;
+    fsSource.ReadBuffer(GlobalChain, FileSize);
+
+    // Scramble UPX0 -> code | UPX0 located in upx v0.6 until present
+    ReplaceUpxStr('UPX0', 'CODE', 4);
+    // Scramble UPX1 -> text | UPX1 located in upx v0.6 until present
+    ReplaceUpxStr('UPX1', 'DATA', 4);
+    // Scramble UPX2 -> data | UPX2 located in upx v0.6 until v1.0x
+    ReplaceUpxStr('UPX2', 'BSS'#$00, 4);
+    // Scramble UPX3 -> data | UPX3 located in upx v0.7x i think.
+    ReplaceUpxStr('UPX3', 'IDATA', 4);
+    // Scramble OLD '$Id: UPXScrambler.pas,v 1.14 2007/01/23 21:43:50 dextra Exp $Id: UPX' located in upx v0.06 until v1.07x
+    if ReplaceUpxStr('$Id: UPX', #0#0#0#0#0#0#0#0#0#0#0#0#0, 13) then
+    begin
+      ReplaceUpxStr('UPX!', #0#0#0#0#0#0, 6);
+    end
+    else
+    begin
+      ReplaceUpxStr('UPX!', #0#0#0#0#0#0#0#0#0#0#0, 11);
+    end;
+    // Scramble anything that is left of something called UPX within the header
+    ReplaceUpxStr('UPX', #0#0#0, 3);
+  finally
+    FreeAndNil(fsSource);
+  end;
+end;
+
 function TUPXHandle.DoWork(IsCompress: Boolean): Integer;
 var
   StartInfo: Tstartupinfo;
   ProcInfo: TProcessInformation;
   lpExitCode: Cardinal;
-  IsMultiProgress: Boolean;
   aParams: string;
   aWorkDir: string;
 begin
   aWorkDir := ExtractFilePath(ParamStr(0));
-  FFileSize := GetFileSize(FileName);
 
   AllocateConsole;
   FillChar(StartInfo, SizeOf(StartInfo), 0);
@@ -291,24 +339,35 @@ begin
     wShowWindow := 2;
     lpTitle := PChar('UPX Shell - ' + FileName);
   end;
-  ExtractUPXApp(FUpxResName, aWorkDir + GetUpxName);
+
+  if UpxVersion <> UPXC then
+    ExtractUPX;
 
   aParams := GetCompressParam;
 
-  // Now start upx.exe with specified parameters
   Createprocess(nil, PChar(aParams), nil, nil, True,
     Create_default_error_mode + CompressPriority, nil, PChar(aWorkDir),
     StartInfo, ProcInfo);
 
-  HideConsole; // Hide console window if it still shows
+  // Hide console window if it still shows
+  HideConsole;
   if IsCompress then
-    GetProgress(ProcInfo, IsMultiProgress);
+    GetProgress(ProcInfo);
 
   Waitforsingleobject(ProcInfo.hProcess, infinite);
   GetExitCodeProcess(ProcInfo.hProcess, lpExitCode);
 
+  if UpxVersion <> UPXC then
+    DelUpx;
+
   Result := lpExitCode;
 
+end;
+
+procedure TUPXHandle.ExtractUPX;
+begin
+  ExtractUPXApp(resUPXVersions[FUpxVersion],
+    ExtractFilePath(ParamStr(0)) + GetUpxName);
 end;
 
 function TUPXHandle.GetCompressParam: string;
@@ -337,7 +396,7 @@ begin
   if IsBackUpFile then
     Result := Result + ' -k';
 
-  Result := Result + ' --compress-icons=2' + IntToStr(CompressIconLevel);
+  Result := Result + ' --compress-icons=' + IntToStr(CompressIconLevel);
 
   if IsCompressExport then
     Result := Result + ' --compress-exports=1'
@@ -354,9 +413,31 @@ begin
     + GetUpxName + ' "' + FFileName + '"' + ' -d';
 end;
 
+function TUPXHandle.GetErrorText: string;
+  function ReadErrorLine(I: integer): string;
+  var
+    TextLen: DWord;
+    CursorPos: TCoord;
+    CharsRead: DWord;
+  begin
+    TextLen := 500;
+    SetLength(Result, 500);
+    CursorPos.X := 0;
+    CursorPos.Y := I;
+    CharsRead := 0;
+    ReadConsoleOutputCharacter(FStdOut, @Result[1], TextLen, CursorPos,
+      CharsRead);
+  end;
+begin
+  Result := Trim(ReadErrorLine(6));
+end;
+
 function TUPXHandle.GetUpxName: string;
 begin
-  Result := 'upxe.exe';
+  if UpxVersion = UPXC then
+    Result := 'upx.exe'
+  else
+    Result := 'upxe.exe';
 end;
 
 procedure TUPXHandle.HideConsole;
@@ -370,6 +451,42 @@ begin
     ShowWindow(FindWindow(nil, @ConsoleTitle), 0);
     Application.BringToFront;
   end;
+end;
+
+function TUPXHandle.IsFilePacked(): boolean;
+var
+  f: TFileStream;
+  aBuff: array [1 .. $3F0] of Byte;
+begin
+  Result := False;
+  f := TFileStream.Create(FileName, fmOpenRead);
+  try
+    f.Position := 0;
+    try
+      f.ReadBuffer(aBuff, $3EF);
+    except
+      on E: Exception do
+      begin
+        Application.MessageBox(PChar(TranslateMsg(
+              'Could not access file. It may be allready open!')),
+          PChar(TranslateMsg('Error')), MB_ICONERROR or MB_OK);
+        Exit;
+      end;
+    end;
+    Result := (AnsiStrInByteArrayPos('UPX', @aBuff[1], $3EF) <> 0);
+  finally
+    FreeAndNil(f);
+  end;
+end;
+
+procedure TUPXHandle.RaiseError(aError: string);
+begin
+  raise EUpxHandle.Create(aError);
+end;
+
+procedure TUPXHandle.ScramblerFile;
+begin
+  DoScramblerFile;
 end;
 
 procedure TUPXHandle.SetCompressIconLevel(const Value: Integer);
@@ -438,9 +555,10 @@ begin
   FOnUpxProgress := Value;
 end;
 
-procedure TUPXHandle.SetUpxResName(const Value: string);
+
+procedure TUPXHandle.SetUpxVersion(const Value: TUPXVersions);
 begin
-  FUpxResName := Value;
+  FUpxVersion := Value;
 end;
 
 end.

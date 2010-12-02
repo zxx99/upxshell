@@ -50,7 +50,6 @@
 			<DCCReference Include="CommandsFrm.pas">
 				<Form>CommandsForm</Form>
 			</DCCReference>
-			<DCCReference Include="Compression.pas"/>
 			<DCCReference Include="Globals.pas"/>
 			<DCCReference Include="LocalizerFrm.pas">
 				<Form>LocalizerForm</Form>
@@ -66,7 +65,6 @@
 			</DCCReference>
 			<DCCReference Include="Shared.pas"/>
 			<DCCReference Include="Translator.pas"/>
-			<DCCReference Include="UPXScrambler.pas"/>
 			<None Include="UPXShell.todo"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

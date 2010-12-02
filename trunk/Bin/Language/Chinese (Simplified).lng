@@ -81,10 +81,10 @@ MainForm.lblDownloadCap.Caption=下载站点:
 MainForm.lblDownload.Caption=N/A
 
 ;Setup Form (设置窗体)
-SetupForm.chkScramble.Hint=加密 UPX 压缩的文件
-SetupForm.chkScramble.Caption=使用文件加密器
-SetupForm.btnScramble.Hint=立即加密选中的文件
-SetupForm.btnScramble.Caption=加密
+SetupForm.chkScramble.Hint=去除加密后的文件UPX标志
+SetupForm.chkScramble.Caption=混淆加密后的文件
+SetupForm.btnScramble.Hint=立即混淆选中的文件
+SetupForm.btnScramble.Caption=混淆
 SetupForm.chkIntegrate.Hint=将 [用 UPX 压缩(&C)] 选项整合到资源管理器右键菜单
 SetupForm.chkIntegrate.Caption=整合到右键菜单
 SetupForm.lblAdvacedOpts.Caption=高级 UPX 选项: 
@@ -184,7 +184,7 @@ msg[023]=并已测试
 msg[024]=并已测试(有警告)
 msg[025]=并测试失败
 msg[026]=UPX 返回下列错误: 
-msg[027]=并已加密
+msg[027]=并已混淆
 msg[028]=...发现更新
 msg[029]=...没有找到更新
 msg[030]=成功

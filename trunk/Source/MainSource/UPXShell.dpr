@@ -27,15 +27,13 @@ uses
   uUpxHandle in 'UPX\uUpxHandle.pas',
   uUpxResAPI in 'UPX\uUpxResAPI.pas',
   CommandsFrm in 'CommandsFrm.pas' {CommandsForm},
-  Compression in 'Compression.pas',
   Globals in 'Globals.pas',
   LocalizerFrm in 'LocalizerFrm.pas' {LocalizerForm},
   MainFrm in 'MainFrm.pas' {MainForm},
   MultiFrm in 'MultiFrm.pas' {MultiForm},
   SetupFrm in 'SetupFrm.pas' {SetupForm},
   Shared in 'Shared.pas',
-  Translator in 'Translator.pas',
-  UPXScrambler in 'UPXScrambler.pas';
+  Translator in 'Translator.pas';
 
 {$R Resources\resources.res}
 {$R *.res}
