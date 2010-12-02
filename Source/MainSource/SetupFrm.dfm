@@ -3,7 +3,7 @@ object SetupForm: TSetupForm
   Top = 234
   BorderStyle = bsDialog
   Caption = 'Advanced options'
-  ClientHeight = 288
+  ClientHeight = 298
   ClientWidth = 357
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object SetupForm: TSetupForm
     Left = 0
     Top = 161
     Width = 357
-    Height = 86
+    Height = 90
     Align = alTop
     BevelInner = bvRaised
     BevelOuter = bvLowered
@@ -38,34 +38,34 @@ object SetupForm: TSetupForm
     end
     object chkCommands: TCheckBox
       Left = 8
-      Top = 54
+      Top = 57
       Width = 177
-      Height = 17
+      Height = 18
       Hint = 'Allways use the entered commands'
       Caption = 'Save commands'
-      TabOrder = 2
+      TabOrder = 1
     end
     object txtCommands: TEdit
       Left = 6
       Top = 28
-      Width = 319
+      Width = 340
       Height = 21
-      TabOrder = 1
+      TabOrder = 0
       OnChange = txtCommandsChange
     end
     object btnCommands: TButton
       Left = 271
-      Top = 52
+      Top = 55
       Width = 75
-      Height = 21
+      Height = 27
       Caption = 'Commands'
-      TabOrder = 0
+      TabOrder = 2
       OnClick = btnCommandsClick
     end
   end
   object btnOk: TButton
     Left = 254
-    Top = 257
+    Top = 264
     Width = 75
     Height = 25
     Caption = 'Ok'
@@ -99,10 +99,10 @@ object SetupForm: TSetupForm
       Left = 271
       Top = 6
       Width = 75
-      Height = 21
+      Height = 24
       Hint = 'Scramble the selected file now'
       Caption = 'Scramble'
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnScrambleClick
     end
     object chkIntegrate: TCheckBox
@@ -114,7 +114,7 @@ object SetupForm: TSetupForm
       Caption = 'Integrate into context menu'
       Checked = True
       State = cbChecked
-      TabOrder = 2
+      TabOrder = 1
       OnClick = chkIntegrateClick
     end
   end

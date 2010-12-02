@@ -731,16 +731,16 @@ object MainForm: TMainForm
           object pnlProgressSize: TPanel
             Left = 146
             Top = 88
-            Width = 263
+            Width = 259
             Height = 29
             AutoSize = True
             BevelInner = bvLowered
             Caption = 'pnlProgressSize'
             TabOrder = 3
             object prbSize: TGauge
-              Left = 8
+              Left = 2
               Top = 2
-              Width = 253
+              Width = 255
               Height = 25
               BackColor = clBtnFace
               BorderStyle = bsNone
@@ -750,7 +750,7 @@ object MainForm: TMainForm
               ShowHint = True
             end
             object sttDecomp: TStaticText
-              Left = 2
+              Left = 26
               Top = 2
               Width = 0
               Height = 25
@@ -957,6 +957,10 @@ object MainForm: TMainForm
         Caption = 'About'
         ImageIndex = 3
         OnShow = tbsAboutShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlAbout: TPanel
           Left = 0
           Top = 0
@@ -1679,6 +1683,10 @@ object MainForm: TMainForm
         Caption = 'Help'
         ImageIndex = 4
         OnShow = tbsHelpShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlHelp: TPanel
           Left = 0
           Top = 0
@@ -1872,14 +1880,14 @@ object MainForm: TMainForm
       '.acm;*.ax|All System Files|*.exe;*.dll;*.com;*.sys;*.ocx;*.dpl;*' +
       '.bpl;*.scr;*.acm;*.ax|All Files|*.*'
     Options = [ofHideReadOnly, ofAllowMultiSelect]
-    Left = 382
-    Top = 244
+    Left = 390
+    Top = 228
   end
   object mnuHistory: TPopupMenu
     Tag = -1
     AutoHotkeys = maManual
     Left = 302
-    Top = 236
+    Top = 228
     object ClearHistory: TMenuItem
       Tag = -1
       Bitmap.Data = {
@@ -1923,6 +1931,6 @@ object MainForm: TMainForm
     InitialDir = '.'
     Options = [ofOverwritePrompt, ofEnableSizing]
     Left = 214
-    Top = 244
+    Top = 236
   end
 end

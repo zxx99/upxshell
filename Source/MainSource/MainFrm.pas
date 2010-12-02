@@ -1,7 +1,3 @@
-{ *
-
-  * }
-
 unit MainFrm;
 
 interface
@@ -138,12 +134,19 @@ type
     procedure lblDownloadClick(Sender: TObject);
     procedure cmbUPXChange(Sender: TObject);
   private
+    procedure LoadSettings;
+    procedure SaveSettings;
+    procedure ShowWorkInfo(const aInfo: string);
+    procedure CalcFileSize;
+
     procedure HistoryPopUp(Sender: TObject);
-    // Declaration of History popup handler
     procedure WMDropfiles(var Msg: Tmessage); message WM_DROPFILES;
     procedure ParseCommandLine;
-    procedure OnUpxProgress(aProgress: Integer; aFileSize: int64);
+    procedure OnUpxProgress(aProgress: integer; aFileSize: int64);
     procedure LoadFile(const FileName: string);
+    procedure ReSetProgress;
+
+    function GetRatio: integer;
     procedure Work;
   public
     { Public declarations }
@@ -154,27 +157,25 @@ var
 
 implementation
 
-uses SysUtils, ShlObj, Wininet, ShellAPI,
-  Globals, Translator, Compression, Shared, UPXScrambler,
+uses SysUtils, ShlObj, Wininet, ShellAPI, Globals, Translator, Shared,
   MultiFrm, SetupFrm, LocalizerFrm;
 {$R *.dfm}
 
 { ** This procedure loads application settings from the registry ** }
-procedure LoadSettings;
+procedure TMainForm.LoadSettings;
 begin
   bStdUPXVersion := 0;
 
-  MainForm.chkAutoCompress.Checked := ReadKey('AutoCompress', ktBoolean).Bool;
-  MainForm.chkExitDone.Checked := ReadKey('ExitDone', ktBoolean).Bool;
-  MainForm.chkBackup.Checked := ReadKey('CreateBackup', ktBoolean).Bool;
-  MainForm.chkTest.Checked := ReadKey('TestFile', ktBoolean).Bool;
-  MainForm.trbCompressLvl.Position := ReadKey('CompressionLevel', ktInteger)
-    .Int;
+  chkAutoCompress.Checked := ReadKey('AutoCompress', ktBoolean).Bool;
+  chkExitDone.Checked := ReadKey('ExitDone', ktBoolean).Bool;
+  chkBackup.Checked := ReadKey('CreateBackup', ktBoolean).Bool;
+  chkTest.Checked := ReadKey('TestFile', ktBoolean).Bool;
+  trbCompressLvl.Position := ReadKey('CompressionLevel', ktInteger).Int;
 
   WorkDir := ReadKey('InstallPath', ktString).Str;
   if WorkDir = '' then
   begin
-    WorkDir := SysUtils.ExtractFileDir(ParamStr(0)) + '\';
+    WorkDir := ExtractFilePath(ParamStr(0));
   end;
 
   LangFile := ReadKey('LanguageFile', ktString).Str;
@@ -220,31 +221,36 @@ begin
 end;
 
 { ** This procedure saves the app settings to registry ** }
-procedure SaveSettings;
+procedure TMainForm.SaveSettings;
 var
   RegValue: TRegValue;
 begin
   { ** The following code saves everything that should be saved of the MainForm ** }
-  RegValue.Bool := MainForm.chkAutoCompress.Checked;
+  RegValue.Bool := chkAutoCompress.Checked;
   StoreKey('AutoCompress', RegValue, ktBoolean);
 
-  RegValue.Bool := MainForm.chkExitDone.Checked;
+  RegValue.Bool := chkExitDone.Checked;
   StoreKey('ExitDone', RegValue, ktBoolean);
 
-  RegValue.Bool := MainForm.chkBackup.Checked;
+  RegValue.Bool := chkBackup.Checked;
   StoreKey('CreateBackup', RegValue, ktBoolean);
 
-  RegValue.Bool := MainForm.chkTest.Checked;
+  RegValue.Bool := chkTest.Checked;
   StoreKey('TestFile', RegValue, ktBoolean);
 
-  RegValue.Int := MainForm.trbCompressLvl.Position;
+  RegValue.Int := trbCompressLvl.Position;
   StoreKey('CompressionLevel', RegValue, ktInteger);
 
-  RegValue.Str := MainForm.cmbLanguage.Text;
+  RegValue.Str := cmbLanguage.Text;
   StoreKey('LanguageFile', RegValue, ktString);
 
-  RegValue.Int := MainForm.cmbUPX.ItemIndex;
+  RegValue.Int := cmbUPX.ItemIndex;
   StoreKey('StdUPXVersion', RegValue, ktInteger);
+end;
+
+procedure TMainForm.ShowWorkInfo(const aInfo: string);
+begin
+  stbMain.Panels[1].Text := aInfo;
 end;
 
 { ** This one loads a list of previously opened files and adds'em to History menu ** }
@@ -303,7 +309,6 @@ begin
     FreeAndNil(Strings);
   end;
 end;
-
 
 procedure TMainForm.LoadFile(const FileName: string);
 // This function unsets the ReadOnly attribute of the file
@@ -512,6 +517,13 @@ begin
   end;
 end;
 
+procedure TMainForm.ReSetProgress;
+begin
+  prbSize.Progress := 0;
+  prbCompress.Progress := 0;
+  sttDecomp.Width := 0;
+end;
+
 { ** This procedure handles the History Menu ** }
 procedure TMainForm.HistoryPopUp(Sender: TObject);
 begin
@@ -540,15 +552,15 @@ begin
   EnumerateLanguages;
   ParseCommandLine;
 
-  DrawGradient(imgGradient.Canvas, 255, imgGradient.Height, imgGradient.Width,
-    clSilver, GetSysColor(COLOR_BTNFACE));
-  DrawGradient(imgLogoGrad1.Canvas, 50, imgLogoGrad1.Height,
-    imgLogoGrad1.Width, clBtnFace, clSilver);
-  DrawGradient(imgLogoGrad2.Canvas, 50, imgLogoGrad2.Height,
-    imgLogoGrad2.Width, clSilver, clBtnFace);
 end;
 
 { ** Clears the History menu ** }
+procedure TMainForm.CalcFileSize;
+begin
+  GlobFileSize := GetFileSize(GlobFileName);
+  lblFSize.Caption := ProcessSize(GlobFileSize);
+end;
+
 procedure TMainForm.ClearHistoryClick(Sender: TObject);
 var
   Value: TRegValue;
@@ -575,13 +587,11 @@ begin
 
 end;
 
-{ ** ** }
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SaveSettings;
 end;
 
-{ ** ** }
 procedure TMainForm.btnOpenClick(Sender: TObject);
 var
   RegValue: TRegValue;
@@ -606,7 +616,6 @@ begin
   end;
 end;
 
-{ ** ** }
 procedure TMainForm.btnGoClick(Sender: TObject);
 var
   CompDecomp: string;
@@ -621,7 +630,6 @@ begin
     begin
       CompDecomp := TranslateMsg('compress');
     end;
-    beep;
     Application.MessageBox(PChar(TranslateMsg('There is nothing to ')
           + CompDecomp), PChar(TranslateMsg('Error')), MB_OK + MB_ICONERROR);
   end
@@ -631,7 +639,6 @@ begin
   end;
 end;
 
-{ ** Drag&Drop handler ** }
 procedure TMainForm.WMDropfiles(var Msg: Tmessage);
 var
   hdrop: integer; // THandle
@@ -715,10 +722,25 @@ procedure TMainForm.Work;
     aUpxHandle.IsCompressExport := SetupForm.chkExports.Checked;
     aUpxHandle.IsDebugMode := Config.DebugMode;
 
-    aUpxHandle.UpxResName := resUPXVersions[TUPXVersions(cmbUPX.ItemIndex)];
+    aUpxHandle.UpxVersion := TUPXVersions(cmbUPX.ItemIndex);
 
     aUpxHandle.OnUpxProgress := OnUpxProgress;
 
+  end;
+
+  function ReadErrorLine(I: integer): string;
+  var
+    TextLen: DWord;
+    CursorPos: TCoord;
+    CharsRead: DWord;
+  begin
+    TextLen := high(TLine);
+    setlength(Result, high(TLine));
+    CursorPos.X := 0;
+    CursorPos.Y := I;
+    CharsRead := 0;
+    ReadConsoleOutputCharacter(hStdOut, @Result[1], TextLen, CursorPos,
+      CharsRead);
   end;
 
 var
@@ -728,6 +750,7 @@ var
   aUpxHandle: TUPXHandle;
   aRet: integer;
 begin
+  ReSetProgress;
   Busy := True;
   OldCursor := Screen.Cursor;
   try
@@ -739,46 +762,84 @@ begin
     aUpxHandle := TUPXHandle.Create;
     try
       LoadUpxHandleParam(aUpxHandle);
-      aRet := aUpxHandle.CompressFile;
 
-      SetCompressionVisuals(True);
-      stbMain.Panels[1].Text := stbMain.Panels[1].Text + TranslateMsg(' (in ')
-        + QueryTime(True, StartTime) + TranslateMsg(' seconds)');
+      if IsCompress then
+        aRet := aUpxHandle.CompressFile
+      else
+        aRet := aUpxHandle.DeCompressFile;
 
       case aRet of
-        0:
+        0: // Successfull
           begin
+            if IsCompress then
+            begin
+              ShowWorkInfo(TranslateMsg('File successfully compressed'));
+              GetRatio;
+            end
+            else
+            begin
+              ShowWorkInfo(TranslateMsg('File successfully decompressed'));
+
+              sttDecomp.Width := Round((prbSize.Width / GetRatio) * 100) - 3;
+            end;
+
+            SetCompressionVisuals(True);
+            if IsCompress and (SetupForm.chkScramble.Checked) then
+            begin
+              try
+                Screen.Cursor := crHourGlass;
+                aUpxHandle.ScramblerFile;
+                ShowWorkInfo(MainForm.stbMain.Panels[1].Text + TranslateMsg
+                    (' & scrambled'));
+              finally
+                Screen.Cursor := OldCursor;
+              end;
+            end;
+            TouchFile(GlobFileName);
+
+            if (chkExitDone.Checked) and (CompressionResult) then
+            begin
+              Close;
+            end;
 
           end;
-        1:
-          begin
-
-          end;
-        2:
-          begin
-
-          end
-        else
+      else
         begin
-
+          // 1: Errors encountered
+          // 2: Warnings encountered
+          if aRet = 1 then
+          begin
+            if IsCompress then
+            begin
+              ShowWorkInfo(TranslateMsg('Errors occured. File not compressed'));
+            end
+            else
+            begin
+              ShowWorkInfo(TranslateMsg('Errors occured. File not decompressed')
+                );
+            end;
+          end
+          else
+          begin
+            if IsCompress then
+            begin
+              ShowWorkInfo(TranslateMsg('File compressed with warnings'));
+            end
+            else
+            begin
+              ShowWorkInfo(TranslateMsg('File decompressed with warnings'));
+            end;
+          end;
+          Application.MessageBox(PChar(TranslateMsg
+                ('UPX returned following error:\n')
+                + aUpxHandle.GetErrorText), PChar(TranslateMsg('Error')),
+            MB_OK + MB_ICONERROR);
         end;
 
       end;
 
-      if IsCompress and (SetupForm.chkScramble.Checked) then
-      begin
-        try
-          Screen.Cursor := crHourGlass;
-          ScrambleUPX;
-        finally
-          Screen.Cursor := OldCursor;
-        end;
-      end;
-      TouchFile(GlobFileName);
-      if (chkExitDone.Checked) and (CompressionResult) then
-      begin
-        Application.Terminate;
-      end;
+      ShowWorkInfo(stbMain.Panels[1].Text + TranslateMsg(' (in ') + QueryTime
+          (True, StartTime) + TranslateMsg(' seconds)'));
 
     finally
       aUpxHandle.Free;
@@ -975,6 +1036,37 @@ begin
   OnShow := nil;
 end;
 
+function TMainForm.GetRatio: integer;
+var
+  Finalsz: integer;
+  Size: integer;
+begin
+  prbCompress.Progress := 100;
+  Finalsz := GetFileSize(GlobFileName);
+  Size := Round((Finalsz / GlobFileSize) * 100);
+
+  lblCSizeCap.Visible := True;
+  lblCSize.Visible := True;
+  lblCSize.Caption := ProcessSize(Finalsz);
+  prbSize.Progress := Size;
+  bvlRatio.Visible := True;
+  lblRatioCap.Visible := True;
+  lblRatio.Visible := True;
+  lblRatio.Caption := IntToStr(Size) + ' %';
+  if lblFSize.Width > lblCSize.Width then
+  begin
+    bvlRatio.Width := lblFSize.Width + 10;
+    bvlRatio.Left := lblFSize.Left - 5;
+  end
+  else
+  begin
+    bvlRatio.Width := lblCSize.Width + 10;
+    bvlRatio.Left := lblCSize.Left - 5;
+  end;
+
+  Result := Size;
+end;
+
 { ** ** }
 procedure TMainForm.btnChkUpdateClick(Sender: TObject);
 
@@ -987,7 +1079,7 @@ procedure TMainForm.btnChkUpdateClick(Sender: TObject);
     hSession: HInternet;
     hURL: HInternet;
     Buffer: array [1 .. BufferSize] of byte;
-    BufferLen: DWORD;
+    BufferLen: DWord;
     sAppName: string;
   begin
     sAppName := ExtractFileName(Application.ExeName);
@@ -1089,7 +1181,7 @@ begin
   end;
 end;
 
-procedure TMainForm.OnUpxProgress(aProgress: Integer; aFileSize: int64);
+procedure TMainForm.OnUpxProgress(aProgress: integer; aFileSize: int64);
 begin
   prbSize.Progress := aFileSize;
   prbCompress.Progress := aProgress;

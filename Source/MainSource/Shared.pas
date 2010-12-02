@@ -5,8 +5,6 @@ interface
 uses
   Windows, Forms, Classes, Graphics, Dialogs, Globals;
 
-procedure Split(const Delimiter: char; const Input: string;
-  const Strings: TStrings);
 function GetPriority: cardinal;
 
 function IsAppPacked(aApp: string): boolean;
@@ -14,45 +12,24 @@ function IsAppPacked(aApp: string): boolean;
 function GetCompressParams: string;
 
 procedure ExtractUPX(const Action: TExtractDelete);
-procedure ScrambleUPX;
 
-procedure DrawGradient(const DrawCanvas: TCanvas; const ColorCycles, Height,
-  Width: integer; const StartColor, EndColor: TColor);
 function ProcessSize(const Size: integer): string;
 function GetFileSize(const FileName: string): integer;
 
-procedure CalcFileSize;
-
-
-procedure WriteLog(Const InStr: String);
-
-function IsNumeric(const InStr: string): boolean;
-function PropertyExists(Component: TComponent; const PropName: string): boolean;
 function StringEncode(const InStr: string): string;
 function StringDecode(const InStr: string): string;
 
-//获取字符串在byte数组中的位置，大小从1开始，aBytes[0]匹配返回值为1 !!!!!
-function AnsiStrInByteArrayPos(aStr: AnsiString; aBytes: PByte; aByteLen: Integer): integer;
+// 获取字符串在byte数组中的位置，大小从1开始，aBytes[0]匹配返回值为1 !!!!!
+function AnsiStrInByteArrayPos(aStr: AnsiString; aBytes: PByte;
+  aByteLen: integer): integer;
 
 function GetUPXBuild(const FilePath: string): string;
-
 
 implementation
 
 uses
-  SysUtils, TypInfo,
-  UPXScrambler, Translator,
+  SysUtils, TypInfo, Translator,
   MainFrm, SetupFrm, uUpxResAPI;
-
-procedure Split(const Delimiter: char; const Input: string;
-  const Strings: TStrings);
-begin
-  Assert(Assigned(Strings));
-  Strings.Clear;
-  Strings.Delimiter := Delimiter;
-  Strings.DelimitedText := Input;
-end;
-
 
 // This one is used for getting the priority of the compression thread
 { **
@@ -148,16 +125,13 @@ begin
       else
         Result := Result + ' --best';
 
-
       if SetupForm.chkForce.Checked then
         Result := Result + ' --force';
-
 
       if SetupForm.chkResources.Checked then
         Result := Result + ' --compress-resources=1'
       else
         Result := Result + ' --compress-resources=0';
-
 
       if SetupForm.chkRelocs.Checked then
         Result := Result + ' --strip-relocs=1'
@@ -166,7 +140,6 @@ begin
 
       if chkBackup.Checked then
         Result := Result + ' -k';
-
 
       case SetupForm.cmbIcons.ItemIndex of
         0:
@@ -216,55 +189,6 @@ begin
   end;
 end;
 
-{ *****************************************
-  * This Function Scrambles the UPXed file *
-  ***************************************** }
-procedure ScrambleUPX;
-var
-  Scrambled: boolean;
-begin
-  if GlobFileName <> '' then
-  begin
-    if IsAppPacked(GlobFileName) then
-    begin
-      Scrambled := fScrambleUPX(GlobFileName);
-      if Scrambled then
-      begin
-        MainForm.chkDecomp.Checked := False;
-        MainForm.stbMain.Panels[1].Text := MainForm.stbMain.Panels[1]
-          .Text + TranslateMsg(' & scrambled');
-      end
-      else
-      begin
-        MainForm.stbMain.Panels[1].Text := MainForm.stbMain.Panels[1]
-          .Text + TranslateMsg(' & scrambled') + ' ' + TranslateMsg('Failed');
-      end;
-    end
-    else
-    begin
-      if Application.MessageBox(PChar(TranslateMsg(
-            'This file doesn''t seem to be packed. Run the Scrambler?')),
-        PChar(TranslateMsg('Confirmation')), MB_YESNO + MB_ICONEXCLAMATION)
-        = idYes then
-      begin
-        Scrambled := fScrambleUPX(GlobFileName);
-        if Scrambled then
-        begin
-          MainForm.chkDecomp.Checked := False;
-          MainForm.stbMain.Panels[1].Text := MainForm.stbMain.Panels[1]
-            .Text + TranslateMsg(' & scrambled');
-        end
-        else
-        begin
-          MainForm.stbMain.Panels[1].Text := MainForm.stbMain.Panels[1]
-            .Text + TranslateMsg(' & scrambled') + ' ' + TranslateMsg
-            ('Failed');
-        end;
-      end;
-    end;
-  end;
-end;
-
 // These are the proceudres to draw that gradient near UPX logo
 type
   TCustomColorArray = array [0 .. 255] of TColor;
@@ -272,9 +196,9 @@ type
 function CalculateColorTable(StartColor, EndColor: TColor;
   ColorCycles: integer): TCustomColorArray;
 var
-  BeginRGB: array [0 .. 2] of byte;
+  BeginRGB: array [0 .. 2] of Byte;
   DiffRGB: array [0 .. 2] of integer;
-  R, G, B, I: byte;
+  R, G, B, I: Byte;
 begin
   BeginRGB[0] := GetRValue(ColorToRGB(StartColor));
   BeginRGB[1] := GetGValue(ColorToRGB(StartColor));
@@ -288,38 +212,6 @@ begin
     G := BeginRGB[1] + MulDiv(I, DiffRGB[1], ColorCycles - 1);
     B := BeginRGB[2] + MulDiv(I, DiffRGB[2], ColorCycles - 1);
     Result[I] := RGB(R, G, B);
-  end;
-end;
-
-{ ** ** }
-procedure DrawGradient(const DrawCanvas: TCanvas; const ColorCycles, Height,
-  Width: integer; const StartColor, EndColor: TColor);
-var
-  Rec: TRect;
-  I: integer;
-  Temp: TBitmap;
-  ColorArr: TCustomColorArray;
-begin
-  try
-    ColorArr := CalculateColorTable(StartColor, EndColor, ColorCycles);
-    Temp := TBitmap.Create;
-    Temp.Width := Width;
-    Temp.Height := Height;
-    Rec.Top := 0;
-    Rec.Bottom := Height;
-    with Temp do
-    begin
-      for I := 0 to ColorCycles do
-      begin
-        Rec.Left := MulDiv(I, Width, ColorCycles);
-        Rec.Right := MulDiv(I + 1, Width, ColorCycles);
-        Canvas.Brush.Color := ColorArr[I];
-        Canvas.FillRect(Rec);
-      end;
-    end;
-    DrawCanvas.Draw(0, 0, Temp);
-  finally
-    FreeAndNil(Temp);
   end;
 end;
 
@@ -365,79 +257,6 @@ end;
 
 
 
-{ ** Calculates file size ** }
-procedure CalcFileSize;
-begin
-  GlobFileSize := GetFileSize(GlobFileName);
-  MainForm.lblFSize.Caption := ProcessSize(GlobFileSize);
-end;
-
-
-procedure WriteLog(const InStr: string);
-const
-  CRLF = #13#10;
-  TimeFormat = 'dd/mm/yy||hh:nn:ss' + #09;
-var
-  fs: TFileStream;
-  filemode: word;
-  date: string;
-begin
-  if Globals.Config.DebugMode then
-  begin
-    if FileExists('log.txt') then
-    begin
-      filemode := fmOpenReadWrite;
-    end
-    else
-    begin
-      filemode := fmCreate;
-    end;
-    fs := TFileStream.Create('log.txt', filemode);
-    try
-      fs.Seek(0, soFromEnd);
-      date := FormatDateTime(TimeFormat, now);
-      fs.Write((@date[1])^, length(date));
-      fs.Write((@InStr[1])^, length(InStr));
-      fs.Write(CRLF, length(CRLF));
-    finally
-      FreeAndNil(fs);
-    end;
-  end;
-end;
-
-
-function IsNumeric(const InStr: string): boolean;
-var
-  I: integer;
-begin
-  Result := True;
-  for I := 1 to length(InStr) do
-  begin
-    if not CharInSet(InStr[I], ['1' .. '9', '0']) then
-    begin
-      Result := False;
-      break;
-    end;
-  end;
-end;
-
-function PropertyExists(Component: TComponent; const PropName: string): boolean;
-var
-  PropInfo: PPropInfo;
-  TK: TTypeKind;
-begin
-  Result := False;
-  PropInfo := GetPropInfo(Component.ClassInfo, PropName);
-  if PropInfo <> nil then
-  begin
-    TK := PropInfo^.PropType^.Kind;
-    if (TK = tkString) or (TK = tkLString) or (TK = tkWString) then
-    begin
-      Result := True;
-    end;
-  end;
-end;
-
 // converts a string, potentially containing newline
 // characters into a flatened string
 function StringEncode(const InStr: string): string;
@@ -472,40 +291,38 @@ begin
 end;
 
 function AnsiStrInByteArrayPos(aStr: AnsiString; aBytes: PByte;
-  aByteLen: Integer): integer;
+  aByteLen: integer): integer;
 var
-  i: Integer;
-  aStrLen: Integer;
-  j: Integer;
-  bIn: Boolean;
+  I: integer;
+  aStrLen: integer;
+  j: integer;
+  bIn: boolean;
 begin
   Result := 0;
 
-  aStrLen := Length(aStr);
-  if aStrLen = 0 then Exit;
+  aStrLen := length(aStr);
+  if aStrLen = 0 then
+    Exit;
 
-  for i := 0 to aByteLen - aStrLen do
+  for I := 0 to aByteLen - aStrLen do
   begin
     bIn := True;
     for j := 1 to aStrLen do
     begin
-      if Pbyte(integer(aBytes) + i + j - 1)^ <> Byte(AnsiChar(aStr[j])) then
+      if PByte(integer(aBytes) + I + j - 1)^ <> Byte(AnsiChar(aStr[j])) then
       begin
         bIn := False;
-        Break;
+        break;
       end;
     end;
     if bIn then
     begin
-      Result := i + 1;
+      Result := I + 1;
       Exit;
     end;
   end;
 
-
 end;
-
-
 
 { *****************************************
   * This Function extracts the UPX Version *
@@ -531,13 +348,13 @@ begin
         fStream.Position := 1;
         fStream.Seek(offsets[I], soFromBeginning);
         fStream.ReadBuffer(aBuff, $4);
-        if CharInSet(AnsiChar(aBuff[1]), ['0'..'9', '.']) then
+        if CharInSet(AnsiChar(aBuff[1]), ['0' .. '9', '.']) then
         begin
           aStr := string(AnsiString(aBuff));
           if (TryStrToFloat(aStr, upxVersion)) then
           begin
             Result := aStr;
-            Break;
+            break;
           end;
         end;
       end;
