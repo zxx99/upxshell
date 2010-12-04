@@ -32,7 +32,8 @@ uses
   MainFrm in 'MainFrm.pas' {MainForm},
   MultiFrm in 'MultiFrm.pas' {MultiForm},
   SetupFrm in 'SetupFrm.pas' {SetupForm},
-  Translator in 'Translator.pas';
+  Translator in 'Translator.pas',
+  uUpdate in 'uUpdate.pas';
 
 {$R Resources\resources.res}
 {$R *.res}

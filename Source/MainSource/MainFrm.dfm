@@ -362,17 +362,13 @@ object MainForm: TMainForm
       Top = 65
       Width = 470
       Height = 226
-      ActivePage = tbsCompress
+      ActivePage = tbsAbout
       Align = alClient
       HotTrack = True
       TabOrder = 1
       object tbsOpen: TTabSheet
         Caption = 'Open File'
         OnShow = tbsOpenShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlOpen: TPanel
           Left = 0
           Top = 0
@@ -676,10 +672,6 @@ object MainForm: TMainForm
         Caption = 'Compress'
         ImageIndex = 1
         OnShow = tbsCompressShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlCompress: TPanel
           Left = 0
           Top = 0
@@ -827,10 +819,6 @@ object MainForm: TMainForm
         Caption = 'Options'
         ImageIndex = 2
         OnShow = tbsOptionsShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlOptions: TPanel
           Left = 0
           Top = 0
@@ -969,10 +957,6 @@ object MainForm: TMainForm
         Caption = 'About'
         ImageIndex = 3
         OnShow = tbsAboutShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlAbout: TPanel
           Left = 0
           Top = 0
@@ -1557,17 +1541,16 @@ object MainForm: TMainForm
             Caption = 'WWW:'
             Transparent = True
           end
-          object lblIONT: TLabel
+          object lblWebSite: TLabel
             Tag = 1
             Left = 97
             Top = 71
-            Width = 99
+            Width = 161
             Height = 13
             Cursor = crHandPoint
-            Hint = 'ION Tek home page'
             Alignment = taCenter
             AutoSize = False
-            Caption = 'upxshell.sf.net'
+            Caption = 'code.google.com/p/upxshell'
             Color = clBtnFace
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clActiveCaption
@@ -1581,7 +1564,7 @@ object MainForm: TMainForm
           end
           object lblUPX: TLabel
             Tag = 2
-            Left = 200
+            Left = 263
             Top = 71
             Width = 99
             Height = 13
@@ -1601,76 +1584,10 @@ object MainForm: TMainForm
             Transparent = True
             OnClick = HyperClick
           end
-          object lblBlaineMail: TLabel
-            Tag = 5
-            Left = 300
-            Top = 103
-            Width = 83
-            Height = 13
-            Cursor = crHandPoint
-            Hint = 'Send a mail to Blaine R Southam'
-            Alignment = taCenter
-            AutoSize = False
-            Caption = 'Mail to Blaine'
-            Color = clBtnFace
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clActiveCaption
-            Font.Height = -11
-            Font.Name = 'MS Sans Serif'
-            Font.Style = [fsUnderline]
-            ParentColor = False
-            ParentFont = False
-            Transparent = True
-            OnClick = HyperClick
-          end
-          object lblIONTmail: TLabel
+          object lblmail: TLabel
             Tag = 3
-            Left = 97
-            Top = 104
-            Width = 99
-            Height = 13
-            Cursor = crHandPoint
-            Hint = 'Send a mail to the author'
-            Alignment = taCenter
-            AutoSize = False
-            Caption = 'efsoft@ukrpost.net'
-            Color = clBtnFace
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clActiveCaption
-            Font.Height = -11
-            Font.Name = 'MS Sans Serif'
-            Font.Style = [fsUnderline]
-            ParentColor = False
-            ParentFont = False
-            Transparent = True
-            OnClick = HyperClick
-          end
-          object lblBlackDexMail: TLabel
-            Tag = 4
-            Left = 200
+            Left = 110
             Top = 103
-            Width = 99
-            Height = 13
-            Cursor = crHandPoint
-            Hint = 'Send a mail to BlackDex'
-            Alignment = taCenter
-            AutoSize = False
-            Caption = 'Mail to BlackDex'
-            Color = clBtnFace
-            Font.Charset = DEFAULT_CHARSET
-            Font.Color = clActiveCaption
-            Font.Height = -11
-            Font.Name = 'MS Sans Serif'
-            Font.Style = [fsUnderline]
-            ParentColor = False
-            ParentFont = False
-            Transparent = True
-            OnClick = HyperClick
-          end
-          object Label1: TLabel
-            Tag = 6
-            Left = 97
-            Top = 135
             Width = 112
             Height = 13
             Cursor = crHandPoint
@@ -1695,10 +1612,6 @@ object MainForm: TMainForm
         Caption = 'Help'
         ImageIndex = 4
         OnShow = tbsHelpShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlHelp: TPanel
           Left = 0
           Top = 0
@@ -1739,6 +1652,7 @@ object MainForm: TMainForm
             BevelInner = bvRaised
             BevelOuter = bvLowered
             TabOrder = 2
+            Visible = False
             object btnSaveAs: TButton
               Left = 120
               Top = 8
@@ -1766,10 +1680,6 @@ object MainForm: TMainForm
       object tbsUpdate: TTabSheet
         Caption = 'Update'
         ImageIndex = 5
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object pnlUpdate: TPanel
           Left = 0
           Top = 0
@@ -1794,10 +1704,10 @@ object MainForm: TMainForm
           end
           object lblDownload: TLabel
             Tag = -1
-            Left = 100
-            Top = 24
-            Width = 289
-            Height = 37
+            Left = 8
+            Top = 42
+            Width = 446
+            Height = 12
             Cursor = crHandPoint
             AutoSize = False
             Caption = 'N/A'

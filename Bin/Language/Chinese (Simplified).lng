@@ -52,16 +52,13 @@ MainForm.lblReleaseCap.Caption=Release:
 MainForm.lblBuildCap.Caption=Build:
 MainForm.lblWWW.Caption=WWW:
 MainForm.lblEMail.Caption=E-Mail:
-MainForm.lblIONT.hint=ION Tek 的主页
-MainForm.lblIONT.Caption=upxshell.sf.net
+MainForm.lblWebSite.hint=程序主页
+MainForm.lblWebSite.Caption=code.google.com/p/upxshell
 MainForm.lblUPX.hint=访问 UPX 官方主页
 MainForm.lblUPX.Caption=upx.sf.net
-MainForm.lblIONTmail.hint=发送邮件给本软件作者
-MainForm.lblIONTmail.Caption=efsoft@ukrpost.net
-MainForm.lblBlackDexMail.hint=发送邮件给 BlackDex
-MainForm.lblBlackDexMail.Caption=写信给 BlackDex
-MainForm.lblBlaineMail.hint=发送邮件给 Blaine R Southam
-MainForm.lblBlaineMail.Caption=写信给 Blaine
+MainForm.lblmail.hint=发送邮件给本软件作者
+MainForm.lblmail.Caption=sandyisone@gmail.com
+
 
 ;Help tab (帮助标签)
 MainForm.tbsHelp.Caption=帮助
