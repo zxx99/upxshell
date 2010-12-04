@@ -95,13 +95,6 @@ var
   BuildInfo: TBuildInfo;
 
 type
-  TLine = array [0 .. 500] of char; // Used in getting the DOS line
-  TExtractDelete = (edExtract, edDelete); // Used for ExtractUPX()
-  TCompDecomp = (cdCompress, cdDecompress { , cdEmpty } );
-  // Passed to CompressFile() and holds
-  // whether to compress or decompress the file
-  TCompResult = (crSuccess, crWarning, crError); // Passed to SetStatus()
-
   // Used for the IntergrateContext procedure to check what to do.
   TIntContext = (doSetup, extRegister, extUnRegister);
   TIntContextOptions = set of TIntContext;
@@ -126,7 +119,6 @@ type
   end;
 
 type
-  TFormLocalizations = array of TFormProperties;
   TLocalizerFormMode = (lfmProperties, lfmMessages);
 
 var
@@ -137,12 +129,7 @@ var
   LangFile: string; // Holds the current language file name
   Extension: integer = 1; // Contains OpenDialog last selected extension
   GlobFileSize: integer; // Contains file size for ratio calculation
-  Busy: boolean = False; // Set when compressing or scrambling files
-  hStdOut: THandle; // Contains handle to standard console output
-  CompressionResult: boolean = False; // Result of the compress operation
   Messages: array [1 .. MsgCount] of string; // Contains the translated messages
-  bStdUPXVersion: byte; // Contains the default UPXVersion selected, see TUPXVersions.
-  curUPXVersion: TUPXVersions;
 
   { ** Global Procedures ** }
 procedure IntergrateContext(const Options: TIntContextOptions);
@@ -150,10 +137,12 @@ function QueryTime(const GetTime: boolean; var StartTime: int64): string;
 function ReadKey(const Name: string; KeyType: TKeyType): TRegValue;
 procedure StoreKey(const Name: string; const Value: TRegValue;
   KeyType: TKeyType);
+
 procedure GetBuild;
 
+function ProcessSize(const Size: integer): string;
+function GetFileSize(const FileName: string): integer;
 
-function LastPos(const Substr: char; const S: string): integer;
 
 implementation
 
@@ -422,21 +411,46 @@ begin
 end;
 
 
-{ **
-  * Method which will find the last position of a char of a given string.
-  * ---
-  * @param: Char    -  Substr  - The character which to look for.
-  * @param: String  - S       - The String (Haystack) where to look for the Substr.
-  ** }
-function LastPos(const Substr: char; const S: string): integer;
+{ ** ** }
+function ProcessSize(const Size: integer): string;
 begin
-  for Result := Length(S) downto 1 do
-  begin
-    if S[Result] = Substr then
-    begin
-      Break;
-    end;
+  Result := IntToStr(Size);
+  case length(Result) of
+    1 .. 3:
+      begin
+        Result := IntToStr(Size) + ' B';
+      end;
+    4 .. 6:
+      begin
+        Result := IntToStr(Size shr 10) + ' KB';
+      end;
+    7 .. 9:
+      begin
+        Result := IntToStr(Size shr 20) + ' MB';
+      end;
+    10 .. 12:
+      begin
+        Result := IntToStr(Size shr 30) + ' GB';
+      end;
   end;
 end;
+
+{ ** ** }
+function GetFileSize(const FileName: string): integer;
+var
+  sr: TSearchRec;
+begin
+  if FindFirst(FileName, faAnyFile, sr) = 0 then
+  begin
+    Result := sr.Size;
+  end
+  else
+  begin
+    Result := -1;
+  end;
+  FindClose(sr);
+end;
+
+
 
 end.

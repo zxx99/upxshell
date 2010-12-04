@@ -23,7 +23,7 @@ object CommandsForm: TCommandsForm
     Width = 559
     Height = 415
     Hint = 'cl'
-    ActivePage = tbsUPX1
+    ActivePage = tbsUPX3
     Align = alClient
     TabOrder = 0
     object tbsUPX1: TTabSheet
@@ -427,6 +427,7 @@ object CommandsForm: TCommandsForm
         ScrollBars = ssVertical
         TabOrder = 0
         WantReturns = False
+        ExplicitTop = 24
       end
     end
   end

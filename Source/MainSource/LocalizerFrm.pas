@@ -6,7 +6,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Globals, Shared;
+  Dialogs, ExtCtrls, StdCtrls, Globals;
 
 type
   TLocalizerForm = class(TForm)
@@ -29,6 +29,8 @@ var
   LocalizerForm: TLocalizerForm;
 
 implementation
+
+uses Translator;
 
 {$R *.dfm}
 

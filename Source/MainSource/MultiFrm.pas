@@ -1,31 +1,9 @@
-{*
-    UPX Shell
-    Copyright © 2000-2006, ION Tek
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*}
-
- {**************--===ION Tek===--****************}
- { MultiFrm unit                                 }
- {***********************************************}
 unit MultiFrm;
 
 interface
 
 uses
-  Windows, Messages, Classes, Graphics, Controls, Forms,
+  Windows, Messages, Classes, Graphics, Controls, Forms, uUpxHandle,
   Dialogs, StdCtrls, ExtCtrls, Gauges, ComCtrls;
 
 type
@@ -73,10 +51,9 @@ type
     procedure lvFilesKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure lvFilesMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: integer);
   private
+    { Private declarations }
     Active:        boolean;
     FDirName:      string;
-    FGlobFileName: string;
-    //backup GlobFileName variable to restore it afterwards
     FFileName:     string[5];
     //    FFileList: array [1..2] of TStringList;
     FFiles:        array of TFilesRec;
@@ -84,8 +61,7 @@ type
     function GetDirectoryName(const Dir: string): string;
     procedure FindFilesNR(APath: string);
     procedure PackFiles;
-    function PackFile(FileName: string): boolean;
-    { Private declarations }
+    procedure OnUpxProgress(aProgress: integer; aFileSize: int64);
   public
     { Public declarations }
   end;
@@ -96,9 +72,8 @@ var
 implementation
 
 uses
-  FileCtrl, TypInfo, SysUtils, Math,
-  Shared, Translator, Globals,
-  MainFrm;
+  FileCtrl, TypInfo, SysUtils, Math, Translator, Globals,
+  MainFrm, SetupFrm, uUpxResAPI;
 
 var
   hStdOut: THandle;
@@ -206,8 +181,8 @@ procedure TMultiForm.FormCreate(Sender: TObject);
 begin
   cmbType.ItemIndex := 1;
   Active        := False;
-  FGlobFileName := GlobFileName;
 end;
+
 
 {** **}
 procedure TMultiForm.btnBrowseClick(Sender: TObject);
@@ -219,19 +194,6 @@ begin
     FDirName       := Dir;
     lblDir.Caption := FDirName;
   end;
-  {lblSelectedCap.Visible:= false;
-  lblSelected.Visible:= false;
-  lblTotalCap.Visible:= false;
-  lblTotal.Visible:= false;
-  lblTimeCap.Visible:= false;
-  lblTime.Visible:= false;
-  TreeViewForm := TTreeViewForm.Create(Self);
-  try
-    if TreeViewForm.ShowModal = mrOk then
-      lblDir.Caption := FDirName;
-  finally
-    TreeViewForm.Release;
-  end;}
 end;
 
 {** **}
@@ -246,12 +208,6 @@ begin
     btnScan.Enabled := Enable;
     btnPack.Enabled := Enable;
     btnExit.Enabled := Enable;
-{    if Enable then
-    begin
-      lblTotalCap.Visible:= true;
-      lblTotal.Visible:= true;
-//      lblTotal.Caption:= inttostr(clbFiles.Items.Count);
-    end;}
   end;
 end;
 
@@ -306,81 +262,7 @@ begin
   end;
 end;
 
-{** **}
-procedure GetProgress(ProcessInfo: TProcessInformation; Compress: boolean);
 
-type
-  TLine = array[0..79] of char;
-var
-  EC:          cardinal;
-  C, Progress: integer;
-  Offset:      integer;
-  ConsoleText: array[0..79] of char;
-  CursorPos:   TCoord;
-  CharsRead:   DWord;
-  Line:        TLine;
-  MyString:    string;
-begin
-  GetExitCodeProcess(ProcessInfo.hProcess, EC);
-  CursorPos.x := 0;
-  CursorPos.y := 0;
-  Progress    := 0;
-  Offset      := 0;
-  while True do
-  begin
-    ReadConsoleOutputCharacter(hStdOut, Line, 80, CursorPos, CharsRead);
-    Offset := Pos('[', Line) - 1;
-    if Offset > -1 then
-    begin
-      break;
-    end
-    else
-    begin
-      Inc(CursorPos.Y);
-    end;
-    if CursorPos.Y > 20 then
-    begin //If we get here - something's wrong
-      CursorPos.Y := 0;
-      GetExitCodeProcess(ProcessInfo.hProcess, EC);
-      if EC <= 2 then
-      begin
-        Exit;
-      end;
-    end;
-  end;
-  while EC > 2 do
-  begin
-    CharsRead := 0;
-    ReadConsoleOutputCharacter(hStdOut, ConsoleText, 80, CursorPos, CharsRead);
-    if Line[Offset] = '[' then
-    begin
-      for C := Offset + Progress + 1 to Offset + 66 do
-      begin
-        if Line[C] = '*' then
-        begin
-          Inc(Progress);
-        end
-        else
-        begin
-          Break;
-        end;
-      end;
-      if Compress then
-      begin
-        MyString := Line[69] + Line[70] + Line[71] + Line[72];
-        MultiForm.sttRatio.Width := round((MultiForm.pgbCurrent.Width / 100) * round(strtofloat(MyString))) - 3;
-      end;
-      MultiForm.pgbCurrent.Progress := floor((Progress / 64) * 100);
-    end;
-    if Progress = 64 then
-    begin
-      Exit;
-    end;
-    sleep(50);
-    Application.ProcessMessages;
-    GetExitCodeProcess(ProcessInfo.hProcess, EC);
-  end;
-end;
 
 {** **}
 procedure UnSetReadOnly(const FileName: string);
@@ -394,40 +276,6 @@ begin
   end;
 end;
 
-{** **}
-function TMultiForm.PackFile(FileName: string): boolean;
-var
-  Si:         Tstartupinfo;
-  p:          Tprocessinformation;
-  lpExitCode: cardinal;
-begin
-  FillChar(Si, SizeOf(Si), 0);
-  with Si do
-  begin
-    cb          := SizeOf(Si);
-    dwFlags     := startf_UseShowWindow;
-    wShowWindow := 2;
-    Si.lpTitle  := PChar('UPX Shell - MultiPack Engine');
-  end;
-  GlobFileName := FileName;
-  FileName     := GetCompressParams;
-  SetCurrentDir(WorkDir);
-  UnSetReadOnly(FileName);
-  ShowWindow(findwindow(nil, PChar('UPX Shell - MultiPack Engine')), 0);
-  Createprocess(nil, PChar(FileName), nil, nil, True,
-    Create_default_error_mode + GetPriority, nil, PChar(WorkDir), Si, p);
-  GetProgress(p, not MainForm.chkDecomp.Checked);
-  WaitForSingleObject(p.hProcess, infinite);
-  GetExitCodeProcess(p.hProcess, lpExitCode);
-  if lpExitCode = 0 then
-  begin
-    Result := True;
-  end
-  else
-  begin
-    Result := False;
-  end;
-end;
 
 {** **}
 procedure TMultiForm.PackFiles;
@@ -460,24 +308,44 @@ procedure TMultiForm.PackFiles;
     end;
   end;
 
-  procedure CreateConsole;
-  var
-    CursorPos:    TCoord;
-    ConsoleTitle: array[1..MAX_PATH] of char;
+
+  procedure LoadUpxHandleParam(aUpxHandle: TUPXHandle);
   begin
-    AllocConsole;
-    GetConsoleTitle(@ConsoleTitle, MAX_PATH);
-    ShowWindow(FindWindow(nil, @ConsoleTitle), 0);
-    Application.BringToFront;
-    hStdOut     := GetStdHandle(STD_OUTPUT_HANDLE);
-    CursorPos.X := 500;
-    CursorPos.Y := 50;
-    SetConsoleScreenBufferSize(hStdOut, CursorPos);
-    CursorPos.X := 0;
-    CursorPos.Y := 0;
-    SetConsoleCursorPosition(hStdOut, CursorPos);
-    MultiForm.pgbCurrent.Progress := 0;
-    MultiForm.pgbOverall.Progress := 0;
+    aUpxHandle.CompressLevel := MainForm.trbCompressLvl.Position;
+
+    case SetupForm.cmbIcons.ItemIndex of
+      0:
+        aUpxHandle.CompressIconLevel := 2;
+      1:
+        aUpxHandle.CompressIconLevel := 1;
+      2:
+        aUpxHandle.CompressIconLevel := 0;
+    end;
+
+    aUpxHandle.CustomParam := SetupForm.txtCommands.Text;
+
+    aUpxHandle.CompressPriority := NORMAL_PRIORITY_CLASS;
+    case SetupForm.cmbPriority.ItemIndex of
+      0:
+        aUpxHandle.CompressPriority := IDLE_PRIORITY_CLASS;
+      1:
+        aUpxHandle.CompressPriority := NORMAL_PRIORITY_CLASS;
+      2:
+        aUpxHandle.CompressPriority := HIGH_PRIORITY_CLASS;
+      3:
+        aUpxHandle.CompressPriority := REALTIME_PRIORITY_CLASS;
+    end;
+
+    aUpxHandle.IsBackUpFile := MainForm.chkBackup.Checked;
+    aUpxHandle.IsForce := SetupForm.chkForce.Checked;
+    aUpxHandle.IsCompressRC := SetupForm.chkResources.Checked;
+    aUpxHandle.IsStripRelocation := SetupForm.chkRelocs.Checked;
+    aUpxHandle.IsCompressExport := SetupForm.chkExports.Checked;
+    aUpxHandle.IsDebugMode := Config.DebugMode;
+
+    aUpxHandle.UpxVersion := TUPXVersions(MainForm.cmbUPX.ItemIndex);
+
+    aUpxHandle.OnUpxProgress := OnUpxProgress;
   end;
 
 var
@@ -485,39 +353,50 @@ var
   C:         cardinal;
   CursorPos: TCoord;
   StartTime: int64;
+  aUpxHandle: TUPXHandle;
 begin
   CursorPos.X := 0;
   CursorPos.Y := 0;
   C           := 0;
-  CreateConsole;
   QueryTime(False, StartTime);
-  ExtractUPX(edExtract);
-  for I := low(FFiles) to high(FFiles) do
-  begin
-    if not FFiles[I].Skip then
+
+  aUpxHandle := TUPXHandle.Create();
+  try
+    LoadUpxHandleParam(aUpxHandle);
+
+    for I := low(FFiles) to high(FFiles) do
     begin
-      if PackFile(FFiles[I].FullName) then
+      if not FFiles[I].Skip then
       begin
-        SetPackedItem(I);
-      end
-      else
-      begin
-        SetPackedItem(I, False);
+        aUpxHandle.FileName := FFiles[I].FullName;
+
+        if aUpxHandle.CompressFile = 0 then
+        begin
+          SetPackedItem(I);
+        end
+        else
+        begin
+          SetPackedItem(I, False);
+        end;
+        MultiForm.pgbOverall.Progress := round((I + 1) / length(FFiles) * 100);
+        MultiForm.sttRatio.Width      := 0;
+        SetConsoleCursorPosition(hStdOut, CursorPos);
+        FillConsoleOutputCharacter(hStdOut, #0, 1500, CursorPos, C);
       end;
-      MultiForm.pgbOverall.Progress := round((I + 1) / length(FFiles) * 100);
-      MultiForm.sttRatio.Width      := 0;
-      SetConsoleCursorPosition(hStdOut, CursorPos);
-      FillConsoleOutputCharacter(hStdOut, #0, 1500, CursorPos, C);
     end;
+  finally
+    aUpxHandle.Free;
   end;
+
+
+
+
+
   MultiForm.pgbCurrent.Progress := 100;
   MultiForm.pgbOverall.Progress := 100;
-  ExtractUPX(edDelete);
   MultiForm.lblTimeCap.Visible  := True;
   MultiForm.lblTime.Visible     := True;
-  MultiForm.lblTime.Caption     := QueryTime(True, StartTime); //Not to forget to re-
-  //enable this code
-  FreeConsole;
+  MultiForm.lblTime.Caption     := QueryTime(True, StartTime);
 end;
 
 {** **}
@@ -555,7 +434,7 @@ end;
 {** **}
 procedure TMultiForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  GlobFileName := FGlobFileName;
+
 end;
 
 {** **}
@@ -592,6 +471,11 @@ begin
       FFiles[lvFiles.Selected.Index].Skip := True;
     end;
   end;
+end;
+
+procedure TMultiForm.OnUpxProgress(aProgress: integer; aFileSize: int64);
+begin
+  pgbCurrent.Progress := aProgress;
 end;
 
 end.

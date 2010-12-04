@@ -19,13 +19,14 @@ function GetStringProperty(Component: TComponent;
 procedure SetStringProperty(AComp: TComponent; const APropName: string;
   const AValue: string);
 
+function StringEncode(const InStr: string): string;
+function StringDecode(const InStr: string): string;
+
+
 implementation
 
 uses
-  SysUtils,
-  Globals, Shared,
-  MainFrm,
-  LocalizerFrm;
+  SysUtils, Globals, MainFrm, LocalizerFrm;
 
 type
   TTokenKind = (tkScoper, tkProperty, tkData);
@@ -63,6 +64,41 @@ begin
     end;
   end;
 end;
+
+
+// converts a string, potentially containing newline
+// characters into a flatened string
+function StringEncode(const InStr: string): string;
+var
+  I: integer;
+begin
+  Result := InStr;
+  for I := 1 to length(Result) do
+  begin
+    if (Result[I] = #13) and (Result[I + 1] = #10) then
+    begin
+      Result[I] := '\';
+      Result[I + 1] := 'n';
+    end;
+  end;
+end;
+
+// converts a flat string into its original form
+function StringDecode(const InStr: string): string;
+var
+  I: integer;
+begin
+  Result := InStr;
+  for I := 1 to length(Result) do
+  begin
+    if (Result[I] = '\') and (Result[I + 1] = 'n') then
+    begin
+      Result[I] := #13;
+      Result[I + 1] := #10;
+    end;
+  end;
+end;
+
 
 
 function IsNumeric(const InStr: string): boolean;
@@ -158,7 +194,7 @@ procedure AddMessage(Msg: string);
   function RemoveQuotes(const InStr: string): string;
   begin
     // Commented out the '''' single quote detection. This has been requested.
-    if (InStr <> '') and (InStr[1] in ['"' { , '''' } ]) then
+    if (InStr <> '') and CharInSet(InStr[1], ['"']) then
     begin
       Result := copy(InStr, 2, length(InStr) - 2);
     end
@@ -276,7 +312,7 @@ procedure ParseLine(const Line: string);
         else
         begin
           // Commented out the '''' single quote detection. This has been requested.
-          if (tKind = tkData) and (InStr[I] in ['"' { , '''' } ]) then
+          if (tKind = tkData) and CharInSet(InStr[I], ['"']) then
           begin
             // Do Nothing
           end
