@@ -134,6 +134,10 @@ type
     procedure lblDownloadClick(Sender: TObject);
     procedure cmbUPXChange(Sender: TObject);
   private
+    curUPXVersion: TUPXVersions;
+    bStdUPXVersion: byte; // Contains the default UPXVersion selected, see TUPXVersions.
+
+
     procedure LoadSettings;
     procedure SaveSettings;
     procedure ShowWorkInfo(const aInfo: string);
@@ -145,6 +149,7 @@ type
     procedure OnUpxProgress(aProgress: integer; aFileSize: int64);
     procedure LoadFile(const FileName: string);
     procedure ReSetProgress;
+    procedure FillUPXVersionsBox;
 
     function GetRatio: integer;
     procedure Work;
@@ -157,7 +162,7 @@ var
 
 implementation
 
-uses SysUtils, ShlObj, Wininet, ShellAPI, Globals, Translator, Shared,
+uses SysUtils, ShlObj, Wininet, ShellAPI, Globals, Translator,
   MultiFrm, SetupFrm, LocalizerFrm;
 {$R *.dfm}
 
@@ -188,12 +193,12 @@ begin
   curUPXVersion := TUPXVersions(bStdUPXVersion);
 end;
 
-procedure FillUPXVersionsBox;
+procedure TMainForm.FillUPXVersionsBox;
 var
   I: TUPXVersions;
   ItemText: String;
 begin
-  MainForm.cmbUPX.Clear;
+  cmbUPX.Clear;
   for I := Low(aUPXVersions) to High(aUPXVersions) do
   begin
     ItemText := aUPXVersions[I];
@@ -208,15 +213,15 @@ begin
         Continue;
       end;
     end;
-    MainForm.cmbUPX.Items.Add(ItemText);
+    cmbUPX.Items.Add(ItemText);
   end;
-  if (bStdUPXVersion <= MainForm.cmbUPX.Items.Count - 1) then
+  if (bStdUPXVersion <= cmbUPX.Items.Count - 1) then
   begin
-    MainForm.cmbUPX.ItemIndex := bStdUPXVersion;
+    cmbUPX.ItemIndex := bStdUPXVersion;
   end
   else
   begin
-    MainForm.cmbUPX.ItemIndex := 1;
+    cmbUPX.ItemIndex := 1;
   end;
 end;
 
@@ -384,31 +389,41 @@ procedure TMainForm.LoadFile(const FileName: string);
 
 var
   aVer: string;
+  aUpxHandle: TUPXHandle;
 begin
   if (FileName <> '') and (FileExists(FileName)) and (SetFileAttrib) then
   begin
     GlobFileName := FileName; // Assign a global filename variable
     ResetVisuals; // Resets visual controls
-    if IsAppPacked(FileName) then
-    begin
-      // This one checks if the file is compressed and sets RadioButton
-      chkDecomp.Checked := True;
-      aVer := GetUPXBuild(GlobFileName);
-      FindUpxItem(aVer);
-    end
-    else
-    begin
-      chkDecomp.Checked := False;
-      aVer := '';
-      cmbUPX.ItemIndex := bStdUPXVersion;
+    aUpxHandle := TUPXHandle.Create;
+    try
+      aUpxHandle.FileName := FileName;
+
+      if aUpxHandle.IsFilePacked then
+      begin
+        // This one checks if the file is compressed and sets RadioButton
+        chkDecomp.Checked := True;
+        aVer := aUpxHandle.GetUPXBuild();
+        FindUpxItem(aVer);
+      end
+      else
+      begin
+        chkDecomp.Checked := False;
+        aVer := '';
+        cmbUPX.ItemIndex := bStdUPXVersion;
+      end;
+      ExtractName(aVer);
+      CalcFileSize;
+      WriteHistory(FileName);
+      if chkAutoCompress.Checked then
+      begin
+        Work;
+      end;
+    finally
+      aUpxHandle.Free;
     end;
-    ExtractName(aVer);
-    CalcFileSize;
-    WriteHistory(FileName);
-    if chkAutoCompress.Checked then
-    begin
-      Work;
-    end;
+
+
   end;
 end;
 
@@ -429,24 +444,32 @@ end;
 procedure LoadVisualSettings;
 var
   UPXOutStr: string;
+  aUpxHandle: TUPXHandle;
 begin
   // Checks if there is newer upx installed and sets it
   with MainForm do
   begin
-    UPXOutStr := GetUPXBuild(WorkDir + 'upx.exe');
-    if (UPXOutStr <> '') then
-    begin
-      lblIns2.Caption := 'UPX Ver && ' + UPXOutStr;
-    end
-    else
-    begin
-      lblIns2.Caption := '';
+    aUpxHandle := TUPXHandle.Create;
+    try
+      aUpxHandle.Filename := WorkDir + 'upx.exe';
+      UPXOutStr := aUpxHandle.GetUPXBuild();
+      if (UPXOutStr <> '') then
+      begin
+        lblIns2.Caption := 'UPX Ver && ' + UPXOutStr;
+      end
+      else
+      begin
+        lblIns2.Caption := '';
+      end;
+
+      // Checks UPX Shell release and buil numbers
+      lblRelease.Caption := BuildInfo.biNoBuild;
+      lblBuild.Caption := IntToStr(BuildInfo.biBuild);
+      Caption := 'UPX Shell V' + BuildInfo.biCute;
+    finally
+      aUpxHandle.Free;
     end;
 
-    // Checks UPX Shell release and buil numbers
-    lblRelease.Caption := BuildInfo.biNoBuild;
-    lblBuild.Caption := IntToStr(BuildInfo.biBuild);
-    Caption := 'UPX Shell V' + BuildInfo.biCute;
   end;
 end;
 
@@ -715,7 +738,6 @@ procedure TMainForm.Work;
     end;
 
     aUpxHandle.IsBackUpFile := chkBackup.Checked;
-    aUpxHandle.IsTestAfterCompression := chkTest.Checked;
     aUpxHandle.IsForce := SetupForm.chkForce.Checked;
     aUpxHandle.IsCompressRC := SetupForm.chkResources.Checked;
     aUpxHandle.IsStripRelocation := SetupForm.chkRelocs.Checked;
@@ -728,20 +750,6 @@ procedure TMainForm.Work;
 
   end;
 
-  function ReadErrorLine(I: integer): string;
-  var
-    TextLen: DWord;
-    CursorPos: TCoord;
-    CharsRead: DWord;
-  begin
-    TextLen := high(TLine);
-    setlength(Result, high(TLine));
-    CursorPos.X := 0;
-    CursorPos.Y := I;
-    CharsRead := 0;
-    ReadConsoleOutputCharacter(hStdOut, @Result[1], TextLen, CursorPos,
-      CharsRead);
-  end;
 
 var
   StartTime: int64;
@@ -751,7 +759,6 @@ var
   aRet: integer;
 begin
   ReSetProgress;
-  Busy := True;
   OldCursor := Screen.Cursor;
   try
     QueryTime(False, StartTime);
@@ -795,9 +802,36 @@ begin
                 Screen.Cursor := OldCursor;
               end;
             end;
+
             TouchFile(GlobFileName);
 
-            if (chkExitDone.Checked) and (CompressionResult) then
+            if IsCompress and (chkTest.Checked) then
+            begin
+              case aUpxHandle.TestCompressedFile of
+                0:
+                  begin
+                    ShowWorkInfo(stbMain.Panels[1].Text +
+                      TranslateMsg(' & tested'));
+                  end;
+                1:
+                  begin
+                    ShowWorkInfo(stbMain.Panels[1].Text +
+                      TranslateMsg(' & tested w/warnings'));
+                  end;
+                2:
+                  begin
+                    ShowWorkInfo(stbMain.Panels[1].Text +
+                      TranslateMsg(' & test failed'));
+                  end
+                else
+                begin
+                  ShowWorkInfo(stbMain.Panels[1].Text +
+                    TranslateMsg(' & tested w/warnings'));
+                end;
+              end;
+            end;
+
+            if (chkExitDone.Checked) then
             begin
               Close;
             end;
@@ -846,7 +880,6 @@ begin
     end;
 
   finally
-    Busy := False;
     DragAcceptFiles(Handle, True);
   end;
 end;

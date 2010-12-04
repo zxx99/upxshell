@@ -1,11 +1,11 @@
 object MultiForm: TMultiForm
   Left = 238
   Top = 108
-  Width = 394
-  Height = 350
   ActiveControl = btnBrowse
   BorderIcons = []
   Caption = 'MultiPack'
+  ClientHeight = 323
+  ClientWidth = 386
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -63,7 +63,6 @@ object MultiForm: TMultiForm
       Width = 145
       Height = 21
       Style = csDropDownList
-      ItemHeight = 13
       ItemIndex = 0
       TabOrder = 2
       Text = '*.exe (Executable)'
@@ -85,7 +84,7 @@ object MultiForm: TMultiForm
     Left = 0
     Top = 59
     Width = 386
-    Height = 168
+    Height = 175
     Hint = 
       'Press '#39'Del'#39' or right-click an item to skip it from being process' +
       'ed'
@@ -125,7 +124,7 @@ object MultiForm: TMultiForm
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 227
+    Top = 234
     Width = 386
     Height = 89
     Align = alBottom

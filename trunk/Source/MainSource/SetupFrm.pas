@@ -1,4 +1,3 @@
-
 unit SetupFrm;
 
 interface
@@ -50,8 +49,7 @@ var
 implementation
 
 uses
-  SysUtils,
-  Shared, Translator, Globals,
+  SysUtils, Translator, Globals,
   MainFrm, CommandsFrm, uUpxHandle;
 {$R *.dfm}
 
@@ -163,7 +161,6 @@ begin
   RegValue.Int := cmbIcons.ItemIndex;
   StoreKey('Icons', RegValue, ktInteger);
 
-
   RegValue.Bool := chkCommands.Checked;
   StoreKey('SaveCommands', RegValue, ktBoolean);
 
@@ -226,7 +223,6 @@ begin
   LoadAdvSettings;
 end;
 
-
 { ** ** }
 procedure TSetupForm.btnCommandsClick(Sender: TObject);
 begin
@@ -237,7 +233,5 @@ begin
     CommandsForm.Release
   end;
 end;
-
-
 
 end.

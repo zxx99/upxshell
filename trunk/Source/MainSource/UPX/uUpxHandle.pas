@@ -21,7 +21,6 @@ type
     FCompressIconLevel: Integer;
     FIsForce: Boolean;
     FIsCompressRC: Boolean;
-    FIsTestAfterCompression: Boolean;
     FCustomParam: string;
     FStdOut: THandle;
     FCompressPriority: Cardinal;
@@ -37,7 +36,6 @@ type
     procedure SetIsCompressRC(const Value: Boolean);
     procedure SetIsForce(const Value: Boolean);
     procedure SetIsStripRelocation(const Value: Boolean);
-    procedure SetIsTestAfterCompression(const Value: Boolean);
     procedure SetCustomParam(const Value: string);
     procedure SetCompressPriority(const Value: Cardinal);
     procedure SetIsDebugMode(const Value: Boolean);
@@ -58,11 +56,17 @@ type
     function DoWork(IsCompress: Boolean): Integer;
     procedure DoScramblerFile;
   public
+    //Compress  0 Success 1 Error 2 Warning
     function CompressFile: Integer;
+    //DeCompress  0 Success 1 Error 2 Warning
     function DeCompressFile: Integer;
+    //Test   0 Success 1 Warning 2 Error
+    function TestCompressedFile: Integer;
 
     procedure ScramblerFile;
+
     function IsFilePacked(): boolean;
+    function GetUPXBuild(): string;
 
     function GetErrorText: string;
 
@@ -76,8 +80,6 @@ type
       SetCompressPriority;
 
     property IsBackUpFile: Boolean read FIsBackUpFile write SetIsBackUpFile;
-    property IsTestAfterCompression: Boolean read FIsTestAfterCompression write
-      SetIsTestAfterCompression;
     property IsForce: Boolean read FIsForce write SetIsForce;
     property IsCompressRC: Boolean read FIsCompressRC write SetIsCompressRC;
     property IsStripRelocation: Boolean read FIsStripRelocation write
@@ -93,7 +95,7 @@ type
 
 implementation
 
-uses Shared, Translator;
+uses Translator;
 
 
 { TUPXHandle }
@@ -118,6 +120,40 @@ begin
   Strings.DelimitedText := Input;
 end;
 
+
+function AnsiStrInByteArrayPos(aStr: AnsiString; aBytes: PByte;
+  aByteLen: integer): integer;
+var
+  I: integer;
+  aStrLen: integer;
+  j: integer;
+  bIn: boolean;
+begin
+  Result := 0;
+
+  aStrLen := length(aStr);
+  if aStrLen = 0 then
+    Exit;
+
+  for I := 0 to aByteLen - aStrLen do
+  begin
+    bIn := True;
+    for j := 1 to aStrLen do
+    begin
+      if PByte(integer(aBytes) + I + j - 1)^ <> Byte(AnsiChar(aStr[j])) then
+      begin
+        bIn := False;
+        break;
+      end;
+    end;
+    if bIn then
+    begin
+      Result := I + 1;
+      Exit;
+    end;
+  end;
+
+end;
 
 
 procedure TUPXHandle.GetProgress(ProcInfo: TProcessInformation);
@@ -357,6 +393,7 @@ begin
   Waitforsingleobject(ProcInfo.hProcess, infinite);
   GetExitCodeProcess(ProcInfo.hProcess, lpExitCode);
 
+
   if UpxVersion <> UPXC then
     DelUpx;
 
@@ -430,6 +467,44 @@ function TUPXHandle.GetErrorText: string;
   end;
 begin
   Result := Trim(ReadErrorLine(6));
+end;
+
+function TUPXHandle.GetUPXBuild: string;
+const
+  offsets: array [1 .. 7] of int64 = ($1F0, $3DB, $39D, $320, $281, $259, $261);
+var
+  fStream: TFileStream;
+  aBuff: array [1 .. 4] of AnsiChar; // This will contain something like '1.20'  begin
+  I: integer;
+  upxVersion: single;
+  aStr: string;
+begin
+  Result := '';
+
+  if FileExists(FileName) then
+  begin
+    try
+      fStream := TFileStream.Create(FileName, fmOpenRead);
+      for I := Low(offsets) to High(offsets) do
+      begin
+        fStream.Position := 1;
+        fStream.Seek(offsets[I], soFromBeginning);
+        fStream.ReadBuffer(aBuff, $4);
+        if CharInSet(AnsiChar(aBuff[1]), ['0' .. '9', '.']) then
+        begin
+          aStr := string(AnsiString(aBuff));
+          if (TryStrToFloat(aStr, upxVersion)) then
+          begin
+            Result := aStr;
+            break;
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(fStream);
+    end;
+  end;
+
 end;
 
 function TUPXHandle.GetUpxName: string;
@@ -544,10 +619,6 @@ begin
   FIsStripRelocation := Value;
 end;
 
-procedure TUPXHandle.SetIsTestAfterCompression(const Value: Boolean);
-begin
-  FIsTestAfterCompression := Value;
-end;
 
 
 procedure TUPXHandle.SetOnUpxProgress(const Value: TOnUpxProgress);
@@ -559,6 +630,34 @@ end;
 procedure TUPXHandle.SetUpxVersion(const Value: TUPXVersions);
 begin
   FUpxVersion := Value;
+end;
+
+function TUPXHandle.TestCompressedFile: Integer;
+var
+  StartInfo: Tstartupinfo;
+  ProcInfo: TProcessInformation;
+  Params: string;
+  lpExitCode: cardinal;
+  WorkDir: string;
+begin
+  WorkDir := ExtractFilePath(ParamStr(0));
+
+  FillChar(StartInfo, SizeOf(StartInfo), 0);
+  with StartInfo do
+  begin
+    cb := SizeOf(StartInfo);
+    dwFlags := startf_UseShowWindow;
+    wShowWindow := 2;
+    StartInfo.lpTitle := PChar('UPX Shell - ' + FileName);
+  end;
+
+  Params := WorkDir + 'upx.exe -t ' + FileName;
+  Createprocess(nil, PChar(Params), nil, nil, True, Create_default_error_mode,
+    nil, PChar(WorkDir), StartInfo, ProcInfo);
+  Waitforsingleobject(ProcInfo.hProcess, infinite);
+  GetExitCodeProcess(ProcInfo.hProcess, lpExitCode);
+  Result := lpExitCode;
+
 end;
 
 end.

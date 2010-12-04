@@ -369,6 +369,10 @@ object MainForm: TMainForm
       object tbsOpen: TTabSheet
         Caption = 'Open File'
         OnShow = tbsOpenShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlOpen: TPanel
           Left = 0
           Top = 0
@@ -672,6 +676,10 @@ object MainForm: TMainForm
         Caption = 'Compress'
         ImageIndex = 1
         OnShow = tbsCompressShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlCompress: TPanel
           Left = 0
           Top = 0
@@ -819,6 +827,10 @@ object MainForm: TMainForm
         Caption = 'Options'
         ImageIndex = 2
         OnShow = tbsOptionsShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlOptions: TPanel
           Left = 0
           Top = 0
@@ -1754,6 +1766,10 @@ object MainForm: TMainForm
       object tbsUpdate: TTabSheet
         Caption = 'Update'
         ImageIndex = 5
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object pnlUpdate: TPanel
           Left = 0
           Top = 0
