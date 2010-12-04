@@ -33,7 +33,6 @@ type
     imgUPX: TImage;
     imgWWW: TImage;
     lblBetter: TLabel;
-    lblBlaineMail: TLabel;
     lblBuild: TLabel;
     lblBuildCap: TLabel;
     lblCompression: TLabel;
@@ -48,8 +47,7 @@ type
     lblFSize: TLabel;
     lblFSizeCap: TLabel;
     lblHistory: TLabel;
-    lblIONT: TLabel;
-    lblIONTmail: TLabel;
+    lblWebSite: TLabel;
     lblLanguage: TLabel;
     lblProgress: TLabel;
     lblProgressSize: TLabel;
@@ -83,7 +81,6 @@ type
     tbsOpen: TTabSheet;
     tbsOptions: TTabSheet;
     trbCompressLvl: TTrackBar;
-    lblBlackDexMail: TLabel;
     pnlAction: TPanel;
     tbsUpdate: TTabSheet;
     pnlUpdate: TPanel;
@@ -102,7 +99,7 @@ type
     dlgSaveLanguageFile: TSaveDialog;
     cmbUPX: TComboBox;
     chkDecomp: TCheckBox;
-    Label1: TLabel;
+    lblmail: TLabel;
     lblIns2: TLabel;
     procedure btnSaveAsClick(Sender: TObject);
     procedure btnEditMessagesClick(Sender: TObject);
@@ -136,7 +133,7 @@ type
   private
     curUPXVersion: TUPXVersions;
     bStdUPXVersion: byte; // Contains the default UPXVersion selected, see TUPXVersions.
-
+    ProductVersion, FileVersion: string;
 
     procedure LoadSettings;
     procedure SaveSettings;
@@ -163,7 +160,7 @@ var
 implementation
 
 uses SysUtils, ShlObj, Wininet, ShellAPI, Globals, Translator,
-  MultiFrm, SetupFrm, LocalizerFrm;
+  MultiFrm, SetupFrm, LocalizerFrm, uUpdate;
 {$R *.dfm}
 
 { ** This procedure loads application settings from the registry ** }
@@ -463,9 +460,9 @@ begin
       end;
 
       // Checks UPX Shell release and buil numbers
-      lblRelease.Caption := BuildInfo.biNoBuild;
-      lblBuild.Caption := IntToStr(BuildInfo.biBuild);
-      Caption := 'UPX Shell V' + BuildInfo.biCute;
+      lblRelease.Caption := ProductVersion;
+      lblBuild.Caption := FileVersion;
+      Caption := 'UPX Shell V' + ProductVersion + ' Build' + FileVersion;
     finally
       aUpxHandle.Free;
     end;
@@ -557,10 +554,11 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   // Set the Global DecimalSeparator so it will be used everywhere since we need it to be a '.'
+  GetAppVersion(Application.ExeName, ProductVersion, FileVersion);
+
   pgcMain.ActivePageIndex := 0;
 
   DecimalSeparator := '.';
-  GetBuild;
   DragAcceptFiles(MainForm.Handle, True);
 
   with Globals.Config do
@@ -1016,11 +1014,10 @@ procedure TMainForm.HyperClick(Sender: TObject);
 var
   S: string;
 begin
-  // 1: Fix by KIRILL on 12.03.2003
   case (Sender as TLabel).Tag of
     1:
       begin
-        S := 'http://upxshell.sf.net';
+        S := 'http://code.google.com/p/upxshell';
       end;
     2:
       begin
@@ -1028,27 +1025,8 @@ begin
       end;
     3:
       begin
-        S :=
-          'mailto:ION_T<efsoft@ukrpost.net>?Subject=UPX_Shell_' +
-          BuildInfo.biFull;
-      end;
-    4:
-      begin
-        S :=
-          'mailto:BlackDex<black.dex.prg@gmail.com>?Subject=UPX_Shell_'
-          + BuildInfo.biFull;
-      end;
-    5:
-      begin
-        S :=
-          'mailto:Blaine<bsoutham@myrealbox.com>?Subject=UPX_Shell_' +
-          BuildInfo.biFull;
-      end;
-    6:
-      begin
-        S :=
-          'mailto:sandy<sandyisone@gmail.com>?Subject=UPX_Shell_' +
-          BuildInfo.biFull;
+        S := 'mailto:sandy<sandyisone@gmail.com>?Subject=UPX_Shell_' +
+          ProductVersion;
       end;
   end;
   ShellExecute(0, 'open', PChar(S), nil, nil, SW_SHOWNORMAL);
@@ -1058,12 +1036,8 @@ end;
 { ** ** }
 procedure TMainForm.FormShow(Sender: TObject);
 begin
-  // I have no other choice, but to put this code in the
-  // onShow event, since I must make sure that the form is
-  // drawn...
   if lowercase(ParamStr(1)) <> '' then
   begin
-    // Checks if there's a file passed through command line
     LoadFile(ParamStr(1));
   end;
   OnShow := nil;
@@ -1100,108 +1074,58 @@ begin
   Result := Size;
 end;
 
-{ ** ** }
+
 procedure TMainForm.btnChkUpdateClick(Sender: TObject);
-
-// Inline function to get the update file
-  function GetInetFile(const fileURL: string;
-    strStream: TStringStream): boolean;
-  const
-    BufferSize = 1024;
-  var
-    hSession: HInternet;
-    hURL: HInternet;
-    Buffer: array [1 .. BufferSize] of byte;
-    BufferLen: DWord;
-    sAppName: string;
-  begin
-    sAppName := ExtractFileName(Application.ExeName);
-    hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG,
-      nil, nil, 0);
-    try
-      hURL := InternetOpenURL(hSession, PChar(fileURL), nil, 0, 0, 0);
-      try
-        repeat
-        begin
-          InternetReadFile(hURL, @Buffer, SizeOf(Buffer), BufferLen);
-          strStream.WriteBuffer(Buffer, BufferLen);
-        end;
-        until BufferLen = 0;
-        Result := True;
-      finally
-        InternetCloseHandle(hURL)
-      end;
-    finally
-      InternetCloseHandle(hSession)
-    end;
-  end;
-
-// Main procedure
 var
-  sUpdateFile: string;
-  sInetStream: TStringStream;
-  sInetStrings: TStrings;
   OldCursor: TCursor;
+  aUpdate: TUpdate;
 begin
-  sUpdateFile := 'http://upxshell.sourceforge.net/update/update.upd';
-
-  sInetStream := TStringStream.Create('');
-  sInetStrings := TStringList.Create;
   rchChangeLog.Lines.Clear;
   OldCursor := Screen.Cursor;
   try
     Screen.Cursor := crHourGlass;
-    if GetInetFile(sUpdateFile, sInetStream) then
-    begin
-      sInetStrings.Clear;
-      sInetStrings.Delimiter := '=';
-      sInetStrings.QuoteChar := '"';
-      sInetStrings.DelimitedText := sInetStream.DataString;
 
-      if (sInetStrings[sInetStrings.IndexOf('UPDATEFILE') + 1] = 'UPXSHELL')
-        then
+    aUpdate := TUpdate.Create;
+    try
+      aUpdate.CheckUpdateURL := 'http://upxshell.googlecode.com/files/update.txt';
+
+      if aUpdate.GetUpdateInfo then
       begin
-        lblOnlineVersion.Caption := sInetStrings
-          [sInetStrings.IndexOf('release') + 1] + '.' + sInetStrings
-          [sInetStrings.IndexOf('build') + 1];
-        lblReleaseDate.Caption := sInetStrings[sInetStrings.IndexOf('date')
-          + 1];
-
-        if (sInetStrings[sInetStrings.IndexOf('build') + 1] > IntToStr
-            (BuildInfo.biBuild)) or
-          ((sInetStrings[sInetStrings.IndexOf('build') + 1] >= IntToStr
-              (BuildInfo.biBuild)) and (sInetStrings[sInetStrings.IndexOf
-              ('release') + 1] > BuildInfo.biNoBuild)) then
-        begin
-          lblDownload.Caption := sInetStrings[sInetStrings.IndexOf('url') + 1];
-          lblDownload.Font.Color := clBlue;
-          lblDownload.Enabled := True;
-          rchChangeLog.Lines.Add
-            (sInetStrings[sInetStrings.IndexOf('changelog') + 1]);
-        end
-        else
-        begin
-          rchChangeLog.Lines.Add('There is no new update avalable.');
-          lblDownload.Font.Color := clWindowText;
-          lblDownload.Enabled := False;
+        try
+          lblOnlineVersion.Caption := aUpdate.NewVersion;
+          lblReleaseDate.Caption := aUpdate.UpdateDate;
+          if StrToCurr(aUpdate.NewVersion) > StrToCurr(ProductVersion) then
+          begin
+            lblDownload.Caption := aUpdate.UpdateFileURL;
+            lblDownload.Font.Color := clBlue;
+            lblDownload.Enabled := True;
+            rchChangeLog.Lines.Text := aUpdate.ChangeLog.Text;
+          end
+          else
+          begin
+            rchChangeLog.Lines.Add('There is no new update avalable.');
+            lblDownload.Font.Color := clWindowText;
+            lblDownload.Enabled := False;
+          end;
+          lblDownload.Hint := lblDownload.Caption;
+        except
+          on e: Exception do
+          begin
+            rchChangeLog.Lines.Add('Error retereving updates!');
+          end;
         end;
-        lblDownload.Hint := lblDownload.Caption;
+
       end
       else
       begin
-        rchChangeLog.Lines.Add('Error retereving updates!' + #13#10 +
-            'Invalide or missing update file.');
+        rchChangeLog.Lines.Add('Error retereving updates!');
       end;
-    end
-    else
-    begin
-      rchChangeLog.Lines.Add('Error retereving updates!');
+    finally
+      aUpdate.Free;
     end;
+
   finally
     Screen.Cursor := OldCursor;
-    FreeAndNil(sInetStream);
-    FreeAndNil(sInetStrings);
-    FreeAndNil(OldCursor);
   end;
 end;
 

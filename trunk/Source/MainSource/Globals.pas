@@ -78,21 +78,6 @@ type
 
   TTokenStr = array of TToken;
 
-  // The following is used to get UPX Shell build info
-  // OLD VERSION: TBuildInfo     = (biFull, biNoBuild, biMajor, biMinor, biRelease, biBuild, biCute);
-type
-  TBuildInfo = record
-    biFull: string;
-    biNoBuild: string;
-    biMajor: integer;
-    biMinor: integer;
-    biRelease: integer;
-    biBuild: integer;
-    biCute: string;
-  end;
-
-var
-  BuildInfo: TBuildInfo;
 
 type
   // Used for the IntergrateContext procedure to check what to do.
@@ -138,11 +123,13 @@ function ReadKey(const Name: string; KeyType: TKeyType): TRegValue;
 procedure StoreKey(const Name: string; const Value: TRegValue;
   KeyType: TKeyType);
 
-procedure GetBuild;
 
 function ProcessSize(const Size: integer): string;
 function GetFileSize(const FileName: string): integer;
 
+
+function GetAppVersion(AppName: string; var ProductVersion, FileVersion: string)
+  : boolean;
 
 implementation
 
@@ -368,47 +355,6 @@ begin
   end;
 end;
 
-procedure GetBuild;
-var
-  pInfo: PVSFixedFileInfo;
-  dInfo: cardinal;
-  dSize: cardinal;
-  dTemp: cardinal;
-  pBuffer: PChar;
-  pFile: PChar;
-begin
-  FillChar(BuildInfo, SizeOf(BuildInfo), 0);
-
-  pFile := PChar(ParamStr(0));
-  dSize := GetFileVersionInfoSize(pFile, dTemp);
-
-  if dSize <> 0 then
-  begin
-    GetMem(pBuffer, dSize);
-
-    try
-      if GetFileVersionInfo(pFile, dTemp, dSize, pBuffer) then
-      begin
-        if VerQueryValue(pBuffer, '\', Pointer(pInfo), dInfo) then
-        begin
-          with BuildInfo do
-          begin
-            biMajor := HiWord(pInfo^.dwFileVersionMS);
-            biMinor := LoWord(pInfo^.dwFileVersionMS);
-            biRelease := HiWord(pInfo^.dwFileVersionLS);
-            biBuild := LoWord(pInfo^.dwFileVersionLS);
-            biFull := Format('%d.%d.%d.%d', [biMajor, biMinor, biRelease,
-              biBuild]);
-            biNoBuild := Format('%d.%d.%d', [biMajor, biMinor, biRelease]);
-            biCute := Format('%d.%d%d', [biMajor, biMinor, biRelease]);
-          end;
-        end;
-      end;
-    finally
-      FreeMem(pBuffer, dSize);
-    end;
-  end;
-end;
 
 
 { ** ** }
@@ -451,6 +397,40 @@ begin
   FindClose(sr);
 end;
 
+
+
+function GetAppVersion(AppName: string; var ProductVersion, FileVersion: string)
+  : boolean;
+var
+  versionsize, ValueSize: Cardinal;
+  VersionBuf, VersionValue: pchar;
+
+begin
+  Result := false;
+  if Trim(AppName) = '' then
+    exit;
+  versionsize := GetFileVersionInfoSize(pchar(AppName), versionsize);
+  if versionsize = 0 then
+    exit;
+  VersionBuf := AllocMem(versionsize);
+  try
+    GetFileVersionInfo(pchar(AppName), 0, versionsize, VersionBuf);
+
+    if VerQueryValue(VersionBuf,
+      pchar
+        ('\StringFileInfo\080403A8\ProductVersion'), Pointer(VersionValue),
+      ValueSize) then
+      ProductVersion := VersionValue;
+
+    if VerQueryValue(VersionBuf, pchar('\StringFileInfo\080403A8\FileVersion'),
+      Pointer(VersionValue), ValueSize) then
+      FileVersion := VersionValue;
+    Result := True;
+  finally
+    Freemem(VersionBuf);
+  end;
+
+end;
 
 
 end.

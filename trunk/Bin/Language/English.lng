@@ -50,11 +50,9 @@ MainForm.lblReleaseCap.Caption=Release:
 MainForm.lblBuildCap.Caption=Build:
 MainForm.lblWWW.Caption=WWW:
 MainForm.lblEMail.Caption=E-Mail:
-MainForm.lblIONT.Caption=upxshell.sf.net
+MainForm.lblWebSite.Caption=code.google.com/p/upxshell
 MainForm.lblUPX.Caption=upx.sf.net
-MainForm.lblIONTmail.Caption=efsoft@ukrpost.net
-MainForm.lblBlackDexMail.Caption=Mail to BlackDex
-MainForm.lblBlaineMail.Caption=Mail to Blaine
+MainForm.lblmail.Caption=sandyisone@gmail.com
 
 ;Help tab
 MainForm.tbsHelp.Caption=Help

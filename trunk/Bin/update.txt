@@ -1,0 +1,10 @@
+UPDATEFILE=UPXSHELL
+version="1.00"
+date="2010-12-14"
+url="http://upxshell.googlecode.com/files/UPXShell%20V1.00%20Build10.12.04.16.exe"
+ChangeLog="
+ V1.00 Build10.12.04.16
+  ===========================
+  * Refator source.
+  + add New Upx.
+"

@@ -64,6 +64,7 @@
 				<Form>SetupForm</Form>
 			</DCCReference>
 			<DCCReference Include="Translator.pas"/>
+			<DCCReference Include="uUpdate.pas"/>
 			<None Include="UPXShell.todo"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
@@ -94,30 +95,30 @@
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-						<VersionInfo Name="MajorVer">1</VersionInfo>
-						<VersionInfo Name="MinorVer">0</VersionInfo>
-						<VersionInfo Name="Release">0</VersionInfo>
-						<VersionInfo Name="Build">1</VersionInfo>
+						<VersionInfo Name="MajorVer">10</VersionInfo>
+						<VersionInfo Name="MinorVer">12</VersionInfo>
+						<VersionInfo Name="Release">4</VersionInfo>
+						<VersionInfo Name="Build">16</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">True</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1033</VersionInfo>
-						<VersionInfo Name="CodePage">1252</VersionInfo>
+						<VersionInfo Name="Locale">2052</VersionInfo>
+						<VersionInfo Name="CodePage">936</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription">UPX Shell</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">1.0.0.1</VersionInfoKeys>
-						<VersionInfoKeys Name="InternalName">UPX Shell</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">ION T &amp; BlackDex &amp; sandy, ION Tek, 2000-2010</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">10.12.4.16</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName">UPXShell</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">UPXShell.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">UPX Shell</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductVersion">1.00</VersionInfoKeys>
-						<VersionInfoKeys Name="Comments">This product is a GUI shell for the famous Ultimate Packer for eXecutables (UPX). Distributed as open-source freeware product. Powered by Delphi 7.</VersionInfoKeys>
-						<VersionInfoKeys Name="SpecialBuild">Updated, Optimized &amp; Maintained by sandy</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+						<VersionInfoKeys Name="SpecialBuild"/>
 					</VersionInfoKeys>
 				</Delphi.Personality>
 			</BorlandProject>
