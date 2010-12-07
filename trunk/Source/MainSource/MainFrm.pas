@@ -26,9 +26,7 @@ type
     dlgOpen: TOpenDialog;
     imgGradient: TImage;
     imgHistory: TImage;
-    imgIONTek: TImage;
     imgLogoGrad1: TImage;
-    imgLogoGrad2: TImage;
     imgMail: TImage;
     imgUPX: TImage;
     imgWWW: TImage;
@@ -1094,18 +1092,16 @@ begin
         try
           lblOnlineVersion.Caption := aUpdate.NewVersion;
           lblReleaseDate.Caption := aUpdate.UpdateDate;
+          lblDownload.Caption := aUpdate.UpdateFileURL;
+          lblDownload.Font.Color := clBlue;
+          lblDownload.Enabled := True;
           if StrToCurr(aUpdate.NewVersion) > StrToCurr(ProductVersion) then
           begin
-            lblDownload.Caption := aUpdate.UpdateFileURL;
-            lblDownload.Font.Color := clBlue;
-            lblDownload.Enabled := True;
             rchChangeLog.Lines.Text := aUpdate.ChangeLog.Text;
           end
           else
           begin
             rchChangeLog.Lines.Add('There is no new update avalable.');
-            lblDownload.Font.Color := clWindowText;
-            lblDownload.Enabled := False;
           end;
           lblDownload.Hint := lblDownload.Caption;
         except
