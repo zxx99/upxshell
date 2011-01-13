@@ -2,8 +2,8 @@
 
 ; 安装程序初始定义常量
 !define PRODUCT_NAME "UPXShell"
-!define PRODUCT_VERSION "1.00"
-!define PRODUCT_BUILDVERSION "10.12.04.16"
+!define PRODUCT_VERSION "1.01"
+!define PRODUCT_BUILDVERSION "10.12.10.12"
 !define PRODUCT_PUBLISHER "sandysoft"
 !define PRODUCT_WEB_SITE "http://code.google.com/p/upxshell/"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\UpxShell.exe"

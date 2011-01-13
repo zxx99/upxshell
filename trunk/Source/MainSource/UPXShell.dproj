@@ -97,8 +97,8 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">10</VersionInfo>
 						<VersionInfo Name="MinorVer">12</VersionInfo>
-						<VersionInfo Name="Release">4</VersionInfo>
-						<VersionInfo Name="Build">16</VersionInfo>
+						<VersionInfo Name="Release">10</VersionInfo>
+						<VersionInfo Name="Build">12</VersionInfo>
 						<VersionInfo Name="Debug">False</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">True</VersionInfo>
@@ -110,13 +110,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription">UPX Shell</VersionInfoKeys>
-						<VersionInfoKeys Name="FileVersion">10.12.4.16</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">10.12.10.12</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">UPXShell</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">UPXShell.exe</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">UPX Shell</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">1.00</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">1.01</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 						<VersionInfoKeys Name="SpecialBuild"/>
 					</VersionInfoKeys>
