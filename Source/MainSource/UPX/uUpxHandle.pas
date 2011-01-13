@@ -378,8 +378,10 @@ begin
 
   if UpxVersion <> UPXC then
     ExtractUPX;
-
-  aParams := GetCompressParam;
+  if IsCompress then
+    aParams := GetCompressParam
+  else
+    aParams := GetDeCompressParam;
 
   Createprocess(nil, PChar(aParams), nil, nil, True,
     Create_default_error_mode + CompressPriority, nil, PChar(aWorkDir),
